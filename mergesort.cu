@@ -16,7 +16,7 @@ int main(int argc, char *argv[]){
     const char *file_name = argv[1];
     uint64_t size_of_array = strtoull(argv[2], NULL, 10);
 
-    printf("file name %s, size of the array : %llu", file_name, size_of_array);
+    printf("file name %s, size of the array : %lu", file_name, size_of_array);
 
 
     //different thread number

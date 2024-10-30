@@ -5,7 +5,7 @@
 
 void print_array_host(int *array, int64_t array_size){
     for(int64_t i = 0; i < array_size; ++i){
-        printf("&d ", array[i]);
+        printf("%d ", array[i]);
     }
     printf("\n");
 }
