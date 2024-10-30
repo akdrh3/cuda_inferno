@@ -106,13 +106,13 @@ int main(int argc, char *argv[]){
         print_array_host(gpu_array, size_of_array);
 
         //calculate the array size that initially goes into each thread
-        uint64_t initial_chunk_size = (uint64_t)ceil((double)size_of_array / number_of_thread);
+        uint64_t segment_size = (uint64_t)ceil((double)size_of_array / number_of_thread);
         
         //start timer
         cuda_timer_start(&start, &stop);
 
         //sort the smallest portion of the sorting
-        initial_merge<<<1, number_of_thread>>>(gpu_array, gpu_tmp, size_of_array, number_of_thread);
+        initial_merge<<<1, number_of_thread>>>(gpu_array, gpu_tmp, size_of_array, segment_size);
         HANDLE_ERROR(cudaDeviceSynchronize());
 
         // Stop timer
