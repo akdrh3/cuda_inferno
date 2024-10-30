@@ -30,6 +30,9 @@ __global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, int se
     uint64_t block_start = tid * segment_size; //last tid * segment_size = size_of_array - segment_size
     uint64_t block_end = min(block_start + segment_size - 1, size_of_array -1);
 
+    printf("tid : %lu, segmentSize : %lu, blockStart : %lu, blockEnd : %lu\n ", tid, segment_size, block_start, block_end);
+    printf("-----------------------------merge start-----------------------------\n");
+
 
     // Ignore out-of-bounds threads
     if (block_start > size_of_array -1){
@@ -50,6 +53,7 @@ __global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, int se
         for(left_start = block_start; left_start <= block_end; left_start += 2 * curr_size){
             uint64_t subarray_middle_index = min(left_start + curr_size, block_end);
             uint64_t right_end = min(left_start + 2 * curr_size -1, block_end);   
+            printf("curr_size: %lu, array_a_index: %lu, array_b_index: %lu, end: %lu\n", curr_size, left_start, subarray_middle_index, right_end);
             if(subarray_middle_index <= right_end){
                 uint64_t array_a_index = left_start, array_b_index = subarray_middle_index, temp_index = left_start, end = right_end;
                 while (array_a_index < subarray_middle_index && array_b_index <= end){
