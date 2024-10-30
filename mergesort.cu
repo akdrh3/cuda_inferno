@@ -118,7 +118,7 @@ int main(int argc, char *argv[]){
         double gpu_sort_time = cuda_timer_stop(start, stop);
         double gpu_sort_time_sec = gpu_sort_time / 1000.0;
 
-        printf("Time elapsed for merge sort with %lu threads: %lf s\n\n", thread_per_block, gpu_sort_time_sec);
+        printf("Time elapsed for merge sort with %lu threads: %lf s\n\n", number_of_thread, gpu_sort_time_sec);
     }
 
 
