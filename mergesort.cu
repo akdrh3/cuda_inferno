@@ -19,7 +19,7 @@ void mergesort(){
 
 }
 
-__global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, int segment_size)
+__global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, uint64_t segment_size)
 {
 
     //getting tid, start, mid, and end index
