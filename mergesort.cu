@@ -52,7 +52,7 @@ __global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, int se
             uint64_t right_end = min(left_start + 2 * curr_size -1, block_end);   
             if(subarray_middle_index <= right_end){
                 uint64_t array_a_index = left_start, array_b_index = subarray_middle_index, temp_index = left_start, end = right_end;
-                while (array_a_index < mid && array_b_index <= end){
+                while (array_a_index < subarray_middle_index && array_b_index <= end){
                     if (arr[array_a_index] <= arr[array_b_index]){
                         tmp[temp_index++] = arr[array_a_index++];
                     } 
@@ -61,16 +61,16 @@ __global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, int se
                     }
                 }
 
-                while (array_a_index < mid){
+                while (array_a_index < subarray_middle_index){
                     tmp[temp_index++] = arr[array_a_index++];
                 }
 
-                while (array_b_index <= end){
+                while (array_b_index <= right_end){
                     tmp[temp_index++] = arr[array_b_index++];
                 }  
 
                     // Now copy the sorted elements from tmp back to the original array 'arr'
-                for (uint64_t i = start; i <= end; i++) {
+                for (uint64_t i = left_start; i <= right_end; i++) {
                     arr[i] = tmp[i];
                 }
             }
