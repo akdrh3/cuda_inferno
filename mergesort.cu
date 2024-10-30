@@ -83,7 +83,7 @@ __global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, int se
 int main(int argc, char *argv[]){
     //get param from command; filename , arraysize * 1 million
     const char *file_name = argv[1];
-    uint64_t size_of_array = strtoull(argv[2], NULL, 10) * 1000000;
+    uint64_t size_of_array = strtoull(argv[2], NULL, 10);
 
     int *gpu_array = NULL;
     int *gpu_tmp = NULL;
@@ -103,6 +103,7 @@ int main(int argc, char *argv[]){
 
         //read from file and store it to gpu_array
         read_from_file(file_name, gpu_array, size_of_array);
+        print_array_host(gpu_array, size_of_array);
 
         //calculate the array size that initially goes into each thread
         uint64_t initial_chunk_size = (uint64_t)ceil((double)size_of_array / number_of_thread);
@@ -119,6 +120,7 @@ int main(int argc, char *argv[]){
         double gpu_sort_time_sec = gpu_sort_time / 1000.0;
 
         printf("Time elapsed for merge sort with %lu threads: %lf s\n\n", number_of_thread, gpu_sort_time_sec);
+        print_array_host(gpu_array, size_of_array);
     }
 
 
