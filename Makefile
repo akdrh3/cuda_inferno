@@ -6,7 +6,7 @@ NVCCFLAGS = -c -rdc=true
 
 # Files
 DEPS = util.h
-CUDEPS = gpu_util.h
+CUDEPS = gpu_util.cuh
 OBJS = util.o gpu_util.o
 
 # Output
@@ -19,10 +19,13 @@ all: $(MERGESORT_OUTPUT)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 %.o: %.cu $(CUDEPS)
-	$(NVCC) $(NVCCFLAGS) -dc -o $@ $< 
+	$(NVCC) $(NVCCFLAGS) -dc -o $@ $<
+
+# mergesort.o: mergesort.cu util.h gpu_util.
+# 	$(NVCC) $(NVCCFLAGS) 
 
 mergesort: mergesort.o $(OBJS)
-	$(NVCC) $(NVCCFLAGS) -o $@ -lcudart
+	$(NVCC) $(NVCCFLAGS) -lcudart $^ -o $@
 
 clean:
 	rm -f *.o $(MERGESORT_OUTPUT) merge_error_log.txt mergeoutput.txt
