@@ -1,4 +1,4 @@
-#include "gpu_util.cu"
+#include "gpu_util.cuh"
 extern "C"{
 #include "util.h"
 }
