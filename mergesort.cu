@@ -37,7 +37,7 @@ __global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, int se
         return;  
     }
 
-    uint64_t curr_size = 1, i = block_start;
+    uint64_t curr_size = 1, i = block_start, left_start = 0;
     while(i+1 < size_of_array){
         if (arr[i] > arr[i+1]){
             swap(arr[i], arr[i+1]);
@@ -105,13 +105,13 @@ int main(int argc, char *argv[]){
         read_from_file(file_name, gpu_array, size_of_array);
 
         //calculate the array size that initially goes into each thread
-        uint64_t initial_chunk_size = (uint64_t)ceil((double)size_of_array / threads_per_block);
+        uint64_t initial_chunk_size = (uint64_t)ceil((double)size_of_array / number_of_thread);
         
         //start timer
         cuda_timer_start(&start, &stop);
 
         //sort the smallest portion of the sorting
-        initial_merge<<<1, number_of_thread>>>(arr, tmp, size_of_array, number_of_thread);
+        initial_merge<<<1, number_of_thread>>>(gpu_array, gpu_tmp, size_of_array, number_of_thread);
         HANDLE_ERROR(cudaDeviceSynchronize());
 
         // Stop timer
