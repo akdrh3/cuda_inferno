@@ -161,7 +161,6 @@ int main(int argc, char *argv[]){
 
         //read from file and store it to gpu_array
         read_from_file(file_name, gpu_array, size_of_array);
-        print_array_host(gpu_array, size_of_array);
  
         //start timer
         cuda_timer_start(&start, &stop);
@@ -173,7 +172,7 @@ int main(int argc, char *argv[]){
         double gpu_sort_time = cuda_timer_stop(start, stop);
         double gpu_sort_time_sec = gpu_sort_time / 1000.0;
 
-        printf("Data Set Size: %f\nTime elapsed for merge sort with %d threads: %lf s\n", array_size_in_GB, number_of_thread, gpu_sort_time_sec);
+        printf("Data Set Size: %f GB\nTime elapsed for merge sort with %d threads: %lf s\n", array_size_in_GB, number_of_thread, gpu_sort_time_sec);
         // print_array_host(gpu_array, size_of_array);
         // print_array_host(gpu_tmp, size_of_array);
         // printf("-------------------------------------------------\n");
