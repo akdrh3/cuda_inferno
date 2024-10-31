@@ -119,7 +119,7 @@ void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread)
     initial_merge<<<1, number_of_thread>>>(arr, tmp, size_of_array, segment_size);
     HANDLE_ERROR(cudaDeviceSynchronize());
     printf("-------------------------------------------------\n");
-    print_array_host(gpu_array, size_of_array);
+    print_array_host(arr, size_of_array);
     printf("-------------------------------------------------\n");
 
     //now it is sure that the smallest segments are sorted
