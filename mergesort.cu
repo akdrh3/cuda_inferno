@@ -123,7 +123,7 @@ void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread)
     if (number_of_thread == 1){
         return;
     }
-    
+
     while (segment_size <= size_of_array){
         mergesortKernel<<<1, number_of_thread>>>(arr, tmp, size_of_array, segment_size);
         HANDLE_ERROR(cudaDeviceSynchronize());
@@ -156,7 +156,8 @@ int main(int argc, char *argv[]){
     cudaEvent_t start, stop;
 
     //different thread number
-    int thread_numbers[5] = {1, 256, 512, 768, 1024};
+    //int thread_numbers[5] = {1, 256, 512, 768, 1024};
+    int thread_numbers[5] = {1, 2, 3, 4, 5};
 
     //size of the array
     double array_size_in_GB = SIZE_IN_GB(sizeof(int)*size_of_array);
