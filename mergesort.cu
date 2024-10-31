@@ -39,7 +39,7 @@ __global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, uint64
     printf("-----------------------------merge start-----------------------------\n");
 
 
-    // uint64_t curr_size = 1, i = block_start, left_start = 0;
+     uint64_t curr_size = 1, i = block_start, left_start = 0;
     // while(i+1 < size_of_array){
     //     if (arr[i] > arr[i+1]){
     //         swap(arr[i], arr[i+1]);
@@ -48,7 +48,7 @@ __global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, uint64
     // }
     
     //keep doubling the curr_size
-    for (curr_size = 1; curr_size <= segment_size; curr_size *= 2){
+    for (curr_size = 1; curr_size < segment_size; curr_size *= 2){
         for(left_start = block_start; left_start <= block_end; left_start += 2 * curr_size){
             uint64_t subarray_middle_index = min(left_start + curr_size, block_end);
             uint64_t right_end = min(left_start + 2 * curr_size -1, block_end);   
