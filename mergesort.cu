@@ -34,7 +34,7 @@ __global__ void mergesortKernel(int* arr, int* tmp, uint64_t size_of_array, uint
 
     if(start < end){
         uint64_t array_a_index = start, array_b_index = mid, temp_index = start;
-        printf("inside merge; index1 : %lu, index2 : %lu, tmp index: %lu, end: %lu\n", start, mid, start, end);
+       //printf("inside merge; index1 : %lu, index2 : %lu, tmp index: %lu, end: %lu\n", start, mid, start, end);
         while (array_a_index < mid && array_b_index <= end){
             if (arr[array_a_index] <= arr[array_b_index]){
                 tmp[temp_index++] = arr[array_a_index++];
@@ -127,15 +127,8 @@ void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread)
     while (segment_size <= size_of_array){
         mergesortKernel<<<1, number_of_thread>>>(arr, tmp, size_of_array, segment_size);
         HANDLE_ERROR(cudaDeviceSynchronize());
-        printf("\n-------------------------------------------------\n");
-        print_array_host(arr, size_of_array);
-        print_array_host(tmp, size_of_array);
-        printf("swapping\n");
         swap_int_pointer(&arr, &tmp, &flipped);
         segment_size *= 2;
-        print_array_host(arr, size_of_array);
-        print_array_host(tmp, size_of_array);
-        printf("-------------------------------------------------\n\n");
     }
 
     if (flipped == true){
@@ -156,8 +149,8 @@ int main(int argc, char *argv[]){
     cudaEvent_t start, stop;
 
     //different thread number
-    //int thread_numbers[5] = {1, 256, 512, 768, 1024};
-    int thread_numbers[5] = {1, 2, 3, 4, 5};
+    int thread_numbers[5] = {1, 256, 512, 768, 1024};
+    //int thread_numbers[5] = {1, 2, 3, 4, 5};
 
     //size of the array
     double array_size_in_GB = SIZE_IN_GB(sizeof(int)*size_of_array);
@@ -180,10 +173,10 @@ int main(int argc, char *argv[]){
         double gpu_sort_time = cuda_timer_stop(start, stop);
         double gpu_sort_time_sec = gpu_sort_time / 1000.0;
 
-        printf("Time elapsed for merge sort with %d threads: %lf s\n", number_of_thread, gpu_sort_time_sec);
-        print_array_host(gpu_array, size_of_array);
-        print_array_host(gpu_tmp, size_of_array);
-        printf("-------------------------------------------------\n");
+        printf("Data Set Size: %f\nTime elapsed for merge sort with %d threads: %lf s\n", array_size_in_GB, number_of_thread, gpu_sort_time_sec);
+        // print_array_host(gpu_array, size_of_array);
+        // print_array_host(gpu_tmp, size_of_array);
+        // printf("-------------------------------------------------\n");
     }
 
 
