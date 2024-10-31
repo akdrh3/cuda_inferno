@@ -124,10 +124,14 @@ void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread)
     while (segment_size <= size_of_array){
         mergesortKernel<<<1, number_of_thread>>>(arr, tmp, size_of_array, segment_size);
         HANDLE_ERROR(cudaDeviceSynchronize());
+        printf("\n-------------------------------------------------\n");
+        print_array_host(arr, size_of_array);
+        print_array_host(tmp, size_of_array);
+        printf("swapping\n");
         swap_int_pointer(&arr, &tmp, &flipped);
         segment_size *= 2;
-        print_array_host(gpu_array, size_of_array);
-        print_array_host(gpu_tmp, size_of_array);
+        print_array_host(arr, size_of_array);
+        print_array_host(tmp, size_of_array);
         printf("-------------------------------------------------\n\n");
     }
 
