@@ -4,14 +4,7 @@ extern "C"{
 }
 #include <cmath>
 
-__device__ void swap(int &a, int &b)
-{
-    int temp = a;
-    a = b;
-    b = temp;
-}
-
-void swap_int_pointer(int **arr_A, int **arr_B, bool flipped){
+void swap_int_pointer(int **arr_A, int **arr_B, bool *flipped){
     //printf("swapping\n");
     int *tmp_pointer=*arr_A;
     *arr_A = *arr_B;
@@ -20,7 +13,7 @@ void swap_int_pointer(int **arr_A, int **arr_B, bool flipped){
     //printf("swapped pointer \n\n");
 }
 
-void mergesortkernel(int* arr, int* tmp, uint64_t size_of_array, uint64_t segment_size){
+__global__ void mergesortkernel(int* arr, int* tmp, uint64_t size_of_array, uint64_t segment_size){
     //getting tid, start, mid, and end index
     uint64_t tid = threadIdx.x + blockDim.x * blockIdx.x;  
 
@@ -61,31 +54,6 @@ void mergesortkernel(int* arr, int* tmp, uint64_t size_of_array, uint64_t segmen
     }
 
 
-}
-
-void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread){
-    //calculate the array size that initially goes into each thread
-    uint64_t segment_size = (uint64_t)ceil((double)size_of_array / number_of_thread);
-    bool flipped = false;
-    
-
-    //sort the smallest portion of the sorting
-    initial_merge<<<1, number_of_thread>>>(arr, tmp, size_of_array, segment_size);
-    HANDLE_ERROR(cudaDeviceSynchronize());
-
-    //now it is sure that the smallest segments are sorted
-    //inter-segments mergesort
-    segment_size *= 2;
-    while (segment_size <= size_of_array){
-        mergesortKernel<<<1, number_of_thread>>>(arr, tmp, size_of_array, segment_size);
-        HANDLE_ERROR(cudaDeviceSynchronize());
-        swap_int_pointer(&arr, &tmp, &flipped);
-        segment_size *= 2;
-    }
-
-    if (flipped == true){
-        swap_int_pointer(&arr, &tmp, &flipped);
-    }
 }
 
 __global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, uint64_t segment_size)
@@ -139,6 +107,31 @@ __global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, uint64
         }
     }
     return; 
+}
+
+void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread){
+    //calculate the array size that initially goes into each thread
+    uint64_t segment_size = (uint64_t)ceil((double)size_of_array / number_of_thread);
+    bool flipped = false;
+    
+
+    //sort the smallest portion of the sorting
+    initial_merge<<<1, number_of_thread>>>(arr, tmp, size_of_array, segment_size);
+    HANDLE_ERROR(cudaDeviceSynchronize());
+
+    //now it is sure that the smallest segments are sorted
+    //inter-segments mergesort
+    segment_size *= 2;
+    while (segment_size <= size_of_array){
+        mergesortKernel<<<1, number_of_thread>>>(arr, tmp, size_of_array, segment_size);
+        HANDLE_ERROR(cudaDeviceSynchronize());
+        swap_int_pointer(&arr, &tmp, &flipped);
+        segment_size *= 2;
+    }
+
+    if (flipped == true){
+        swap_int_pointer(&arr, &tmp, &flipped);
+    }
 }
 
 
