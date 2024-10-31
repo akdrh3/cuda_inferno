@@ -34,7 +34,7 @@ __global__ void mergesortKernel(int* arr, int* tmp, uint64_t size_of_array, uint
 
     if(start < end){
         uint64_t array_a_index = start, array_b_index = mid, temp_index = start;
-        //printf("inside merge; index1 : %lu, index2 : %lu, tmp index: %lu, end: %lu\n", start, mid, start, end);
+        printf("inside merge; index1 : %lu, index2 : %lu, tmp index: %lu, end: %lu\n", start, mid, start, end);
         while (array_a_index < mid && array_b_index <= end){
             if (arr[array_a_index] <= arr[array_b_index]){
                 tmp[temp_index++] = arr[array_a_index++];
