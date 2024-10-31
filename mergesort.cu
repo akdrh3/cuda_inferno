@@ -154,6 +154,7 @@ int main(int argc, char *argv[]){
 
     //size of the array
     double array_size_in_GB = SIZE_IN_GB(sizeof(int)*size_of_array);
+    printf("Data Set Size: %f GB\n", array_size_in_GB);
 
     //run mergesort 5 times
     for (int i = 0; i < 5; ++i){
@@ -172,7 +173,7 @@ int main(int argc, char *argv[]){
         double gpu_sort_time = cuda_timer_stop(start, stop);
         double gpu_sort_time_sec = gpu_sort_time / 1000.0;
 
-        printf("Data Set Size: %f GB\nTime elapsed for merge sort with %d threads: %lf s\n", array_size_in_GB, number_of_thread, gpu_sort_time_sec);
+        printf("Time elapsed for merge sort with %d threads: %lf s\n", array_size_in_GB, number_of_thread, gpu_sort_time_sec);
         // print_array_host(gpu_array, size_of_array);
         // print_array_host(gpu_tmp, size_of_array);
         // printf("-------------------------------------------------\n");
