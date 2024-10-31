@@ -140,7 +140,7 @@ void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread)
 int main(int argc, char *argv[]){
     //get param from command; filename , arraysize * 1 million
     const char *file_name = argv[1];
-    uint64_t size_of_array = strtoull(argv[2], NULL, 10);
+    uint64_t size_of_array = strtoull(argv[2], NULL, 10)*1000000;
 
     int *gpu_array = NULL;
     int *gpu_tmp = NULL;
