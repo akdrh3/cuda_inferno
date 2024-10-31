@@ -28,17 +28,16 @@ __global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, uint64
     // based on tide, devide and get the portion of the array that this specific tid has to work on
     // everything is in index number
     uint64_t block_start = tid * segment_size; //last tid * segment_size = size_of_array - segment_size
-    uint64_t block_end = min(block_start + segment_size - 1, size_of_array -1);
-
-    printf("tid : %lu, segmentSize : %lu, blockStart : %lu, blockEnd : %lu\n ", tid, segment_size, block_start, block_end);
-    printf("-----------------------------merge start-----------------------------\n");
-
 
     // Ignore out-of-bounds threads
     if (block_start > size_of_array -1){
         //printf("out of bound thread happening even though it should not in very frist step unless the array size is smaller than 256.");
         return;  
     }
+    uint64_t block_end = min(block_start + segment_size - 1, size_of_array -1);
+    printf("tid : %lu, segmentSize : %lu, blockStart : %lu, blockEnd : %lu\n ", tid, segment_size, block_start, block_end);
+    printf("-----------------------------merge start-----------------------------\n");
+
 
     uint64_t curr_size = 1, i = block_start, left_start = 0;
     while(i+1 < size_of_array){
