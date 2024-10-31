@@ -126,6 +126,9 @@ void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread)
         HANDLE_ERROR(cudaDeviceSynchronize());
         swap_int_pointer(&arr, &tmp, &flipped);
         segment_size *= 2;
+        print_array_host(gpu_array, size_of_array);
+        print_array_host(gpu_tmp, size_of_array);
+        printf("-------------------------------------------------\n\n");
     }
 
     if (flipped == true){
