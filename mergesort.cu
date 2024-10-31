@@ -72,11 +72,11 @@ __global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, uint64
                 }  
 
                 // Now copy the sorted elements from tmp back to the original array 'arr'
-                // for (uint64_t i = left_start; i <= right_end; i++) {
-                //     arr[i] = tmp[i];
-                // }
-                swap_int_pointer(int **arr_A, int **arr_B, bool flipped);
-                printf("flipped: %d", flipped);
+                for (uint64_t i = left_start; i <= right_end; i++) {
+                    arr[i] = tmp[i];
+                }
+                // swap_int_pointer(int **arr, int **tmp, bool flipped);
+                // printf("flipped: %d", flipped);
             }
         }
     }
