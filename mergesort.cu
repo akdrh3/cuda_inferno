@@ -19,7 +19,7 @@ __global__ void mergesortKernel(int* arr, int* tmp, uint64_t size_of_array, uint
 
     // based on tide, devide and get the portion of the array that this specific tid has to work on
     // everything is in index number
-    uint64_t start = tid * segment_size; //last tid * segment_size = size_of_array - segment_size
+    uint64_t start = tid * segment_size * 2; //last tid * segment_size = size_of_array - segment_size
 
     // Ignore out-of-bounds threads
     if (start > size_of_array -1){
