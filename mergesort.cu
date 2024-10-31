@@ -13,7 +13,7 @@ void swap_int_pointer(int **arr_A, int **arr_B, bool *flipped){
     //printf("swapped pointer \n\n");
 }
 
-__global__ void mergesortkernel(int* arr, int* tmp, uint64_t size_of_array, uint64_t segment_size){
+__global__ void mergesortKernel(int* arr, int* tmp, uint64_t size_of_array, uint64_t segment_size){
     //getting tid, start, mid, and end index
     uint64_t tid = threadIdx.x + blockDim.x * blockIdx.x;  
 
