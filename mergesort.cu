@@ -10,6 +10,15 @@ __device__ void swap(int &a, int &b)
     b = temp;
 }
 
+void swap_int_pointer(int **arr_A, int **arr_B, bool flipped){
+    //printf("swapping\n");
+    int *tmp_pointer=*arr_A;
+    *arr_A = *arr_B;
+    *arr_B = tmp_pointer;
+    flipped = !flipped;
+    //printf("swapped pointer \n\n");
+}
+
 
 void mergesortkernel(){
 
@@ -19,9 +28,8 @@ void mergesort(){
 
 }
 
-__global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, uint64_t segment_size)
+__global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, uint64_t segment_size, bool flipped)
 {
-
     //getting tid, start, mid, and end index
     uint64_t tid = threadIdx.x + blockDim.x * blockIdx.x;
 
@@ -35,7 +43,7 @@ __global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, uint64
         return;  
     }
     uint64_t block_end = min(block_start + segment_size - 1, size_of_array -1);
-    printf("tid : %lu, segmentSize : %lu, blockStart : %lu, blockEnd : %lu\n ", tid, segment_size, block_start, block_end);
+    //printf("tid : %lu, segmentSize : %lu, blockStart : %lu, blockEnd : %lu\n ", tid, segment_size, block_start, block_end);
 
     uint64_t curr_size = 1, left_start = 0;
     //keep doubling the curr_size
@@ -43,7 +51,7 @@ __global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, uint64
         for(left_start = block_start; left_start <= block_end; left_start += 2 * curr_size){
             uint64_t subarray_middle_index = min(left_start + curr_size, block_end);
             uint64_t right_end = min(left_start + 2 * curr_size -1, block_end);   
-            printf("curr_size: %lu, array_a_index: %lu, array_b_index: %lu, end: %lu\n", curr_size, left_start, subarray_middle_index, right_end);
+            //printf("curr_size: %lu, array_a_index: %lu, array_b_index: %lu, end: %lu\n", curr_size, left_start, subarray_middle_index, right_end);
             if(subarray_middle_index <= right_end){
                 uint64_t array_a_index = left_start, array_b_index = subarray_middle_index, temp_index = left_start, end = right_end;
                 while (array_a_index < subarray_middle_index && array_b_index <= end){
@@ -63,10 +71,12 @@ __global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, uint64
                     tmp[temp_index++] = arr[array_b_index++];
                 }  
 
-                    // Now copy the sorted elements from tmp back to the original array 'arr'
-                for (uint64_t i = left_start; i <= right_end; i++) {
-                    arr[i] = tmp[i];
-                }
+                // Now copy the sorted elements from tmp back to the original array 'arr'
+                // for (uint64_t i = left_start; i <= right_end; i++) {
+                //     arr[i] = tmp[i];
+                // }
+                swap_int_pointer(int **arr_A, int **arr_B, bool flipped);
+                printf("flipped: %d", flipped);
             }
         }
     }
@@ -83,6 +93,7 @@ int main(int argc, char *argv[]){
     int *gpu_tmp = NULL;
     HANDLE_ERROR(cudaMallocManaged((void**)&gpu_array, size_of_array * sizeof(int)));
     HANDLE_ERROR(cudaMallocManaged((void **)&gpu_tmp, size_of_array * sizeof(int)));
+    bool flipped = false;
     cudaEvent_t start, stop;
 
     //different thread number
@@ -106,7 +117,7 @@ int main(int argc, char *argv[]){
         cuda_timer_start(&start, &stop);
 
         //sort the smallest portion of the sorting
-        initial_merge<<<1, number_of_thread>>>(gpu_array, gpu_tmp, size_of_array, segment_size);
+        initial_merge<<<1, number_of_thread>>>(gpu_array, gpu_tmp, size_of_array, segment_size, flipped);
         HANDLE_ERROR(cudaDeviceSynchronize());
 
         // Stop timer
