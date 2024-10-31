@@ -120,7 +120,10 @@ void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread)
     HANDLE_ERROR(cudaDeviceSynchronize());
     //now it is sure that the smallest segments are sorted
     //inter-segments mergesort
-    segment_size *= 2;
+    if (number_of_thread == 1){
+        return;
+    }
+    
     while (segment_size <= size_of_array){
         mergesortKernel<<<1, number_of_thread>>>(arr, tmp, size_of_array, segment_size);
         HANDLE_ERROR(cudaDeviceSynchronize());
