@@ -3,6 +3,14 @@ extern "C"{
 #include "util.h"
 }
 #include <cmath>
+#include <climits>
+#include <stdio.h>
+
+__global__ void printMaxInt()
+{
+    printf("The maximum value of int in CUDA: %d\n", INT_MAX);
+}
+
 
 void swap_int_pointer(int **arr_A, int **arr_B, bool *flipped){
     //printf("swapping\n");
@@ -139,11 +147,11 @@ void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread)
 
 int main(int argc, char *argv[]){
     //get param from command; filename , arraysize * 1 million
-    const char *file_name = argv[1];
-    uint64_t size_of_array = strtoull(argv[2], NULL, 10)*1000000;
+    // const char *file_name = argv[1];
+    // uint64_t size_of_array = strtoull(argv[2], NULL, 10)*1000000;
 
-    uint64_t entire_file_size = count_size_of_file(file_name);
-    printf("entire file size : %lu", entire_file_size);
+    printMaxInt<<<1, 1>>>();
+    cudaDeviceSynchronize();
 //     int *gpu_array = NULL;
 //     int *gpu_tmp = NULL;
 //     HANDLE_ERROR(cudaMallocManaged((void**)&gpu_array, size_of_array * sizeof(int)));
