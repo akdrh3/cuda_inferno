@@ -11,8 +11,8 @@ print("Current Time:", formatted_time)
 
 start_time = time.time()
 
-file_name = f"numbers_{input_a}.txt"
 data_size = input_a * 1000000
+file_name = f"numbers_{data_size}.txt"
 with open(file_name, "w") as f:
     for i in range(0,data_size):
         num = r.randint(0,2147483647)
