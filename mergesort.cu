@@ -143,7 +143,7 @@ int main(int argc, char *argv[]){
     uint64_t size_of_array = strtoull(argv[2], NULL, 10)*1000000;
 
     uint64_t entire_file_size = count_size_of_file(file_name);
-//     printf("entire file size : %lu", entire_file_size);
+    printf("entire file size : %lu", entire_file_size);
 //     int *gpu_array = NULL;
 //     int *gpu_tmp = NULL;
 //     HANDLE_ERROR(cudaMallocManaged((void**)&gpu_array, size_of_array * sizeof(int)));
