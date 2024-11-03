@@ -1,5 +1,6 @@
 import random as r
 import time
+import math
 from datetime import datetime
 
 input_a = int(input("Enter the size of numbers: "))
@@ -13,10 +14,13 @@ start_time = time.time()
 
 data_size = input_a * 1000000
 file_name = f"numbers_{data_size}.txt"
+parse = math.ceil(data_size/10)
 with open(file_name, "w") as f:
     for i in range(0,data_size):
         num = r.randint(0,2147483647)
         f.write("%d\n"%num)
+        if(i%parse == 0):
+            print(f"just generated {i}th element: {num}")
 
 end_time = time.time()
 elapsed_time = end_time - start_time
