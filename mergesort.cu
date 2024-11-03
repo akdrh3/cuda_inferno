@@ -186,7 +186,7 @@ int main(int argc, char *argv[]){
 //     HANDLE_ERROR(cudaFree(gpu_tmp));
 //     HANDLE_ERROR(cudaFree(gpu_array));      
 
-//     return 0;
+    return 0;
 
-// }
+}
 
