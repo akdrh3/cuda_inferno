@@ -50,7 +50,7 @@ void read_from_file(const char *file_name, int *numbers, uint64_t size_of_array)
 
 
 
-uint64_t count_size_of_file(char *file_name) {
+uint64_t count_size_of_file(const char *file_name) {
     FILE *file = fopen(file_name, "r");
     if (file == NULL) {
         perror("Error opening file");
