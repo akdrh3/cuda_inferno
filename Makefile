@@ -21,7 +21,7 @@ all: $(MERGESORT_OUTPUT)
 %.o: %.cu $(CUDEPS)
 	$(NVCC) $(NVCCFLAGS) -dc -o $@ $<
 
-mergesort: mergesort_with_quick.o $(OBJS)
+mergesort: insertion_with_mergesort.o $(OBJS)
 	$(NVCC) -o mergesort insertion_with_mergesort.o util.o gpu_util.o -lcudart
 
 clean:
