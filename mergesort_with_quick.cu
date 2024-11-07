@@ -76,10 +76,9 @@ void parallelSort(int* arr, uint64_t totalSize, uint64_t chunkSize, int number_o
     quicksortKernel<<<1, number_of_thread>>>(arr, chunkSize, totalSize);
     merge(arr, totalSize, chunkSize);
 
-    cudaFree(d_arr);
 }
 
-int main()
+int main(int argc, char *argv[])
 {
     //get param from command; filename , arraysize * 1 million
     const char *file_name = argv[1];
