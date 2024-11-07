@@ -3,8 +3,10 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
-#include "gpu_util.cuh" // Assuming you have necessary GPU error handling and utility functions here
-
+#include "gpu_util.cuh"
+extern "C"{
+#include "util.h"
+}
 // Device function for insertion sort on a subarray
 __device__ void insertionSort(int* arr, int low, int high)
 {
