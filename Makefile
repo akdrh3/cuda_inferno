@@ -21,10 +21,10 @@ all: $(MERGESORT_OUTPUT)
 %.o: %.cu $(CUDEPS)
 	$(NVCC) $(NVCCFLAGS) -dc -o $@ $<
 
-mergesort: mergesort.o $(OBJS)
-	$(NVCC) -o mergesort mergesort.o util.o gpu_util.o -lcudart
+mergesort: mergesort_with_quick.o $(OBJS)
+	$(NVCC) -o mergesort mergesort_with_quick.o util.o gpu_util.o -lcudart
 
 clean:
-	rm -f *.o $(MERGESORT_OUTPUT) merge_error_log.txt mergeoutput.txt
+	rm -f *.o $(MERGESORT_OUTPUT) 
 
 .PHONY: clean
