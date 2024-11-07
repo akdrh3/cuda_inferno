@@ -110,6 +110,7 @@ int main(int argc, char *argv[])
         std::cerr << "Usage: " << argv[0] << " <file_name> <size_of_array_in_millions>" << std::endl;
         return 1;
     }
+    cudaEvent_t start, stop;
 
     const char* file_name = argv[1];
     uint64_t size_of_array = strtoull(argv[2], NULL, 10) * 10;
@@ -121,15 +122,17 @@ int main(int argc, char *argv[])
     // Number of streams to use for concurrent execution
     int number_of_streams = 4;
 
+
     // Read data from file (assuming function `read_from_file` is available)
     read_from_file(file_name, gpu_array, size_of_array);
 
     // Set chunk size based on the number of streams (adjustable)
     uint64_t chunkSize = std::ceil(static_cast<double>(size_of_array) / number_of_streams);
-
+    cuda_timer_start(&start, &stop);
     // Start the sorting process with CUDA streams
     parallelSortWithStreams(gpu_array, size_of_array, chunkSize, number_of_streams);
-
+    double gpu_sort_time = cuda_timer_stop(start, stop);
+    double gpu_sort_time_sec = gpu_sort_time / 1000.0;
     // Print a part of the sorted array for verification
     for (int i = 0; i < std::min(size_of_array, uint64_t(10)); i++)
     {
@@ -137,6 +140,9 @@ int main(int argc, char *argv[])
     }
     std::cout << std::endl;
 
+
+    printf("Time elapsed for merge sort with %256 threads: %lf s\n", gpu_sort_time_sec);
+    
     // Free GPU memory
     cudaFree(gpu_array);
 
