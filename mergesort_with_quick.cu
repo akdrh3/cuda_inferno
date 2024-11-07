@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 {
     //get param from command; filename , arraysize * 1 million
     const char *file_name = argv[1];
-    uint64_t size_of_array = strtoull(argv[2], NULL, 10)*1000000;
+    uint64_t size_of_array = strtoull(argv[2], NULL, 10)*100;
     
     int *gpu_array = NULL;
     HANDLE_ERROR(cudaMallocManaged((void**)&gpu_array, size_of_array * sizeof(int)));
