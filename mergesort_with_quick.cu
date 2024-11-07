@@ -74,6 +74,7 @@ void merge(int* arr, uint64_t totalSize, uint64_t chunkSize)
 void parallelSort(int* arr, uint64_t totalSize, uint64_t chunkSize, int number_of_thread)
 {
     quicksortKernel<<<1, number_of_thread>>>(arr, chunkSize, totalSize);
+    HANDLE_ERROR(cudaDeviceSynchronize());
     merge(arr, totalSize, chunkSize);
 
 }
