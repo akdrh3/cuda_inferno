@@ -22,7 +22,7 @@ all: $(MERGESORT_OUTPUT)
 	$(NVCC) $(NVCCFLAGS) -dc -o $@ $<
 
 mergesort: mergesort_with_quick.o $(OBJS)
-	$(NVCC) -o mergesort mergesort_with_quick.o util.o gpu_util.o -lcudart
+	$(NVCC) -o mergesort insertion_with_mergesort.o util.o gpu_util.o -lcudart
 
 clean:
 	rm -f *.o $(MERGESORT_OUTPUT) 
