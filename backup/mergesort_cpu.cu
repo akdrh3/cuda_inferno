@@ -150,7 +150,7 @@ int main(int argc, char *argv[]){
     cudaEvent_t start, stop;
 
     //different thread number
-    int thread_numbers[5] = {128, 320, 384, 448, 576};
+    int thread_numbers[5] = {1, 256, 512, 768, 1024};
     //int thread_numbers[5] = {1, 2, 3, 4, 5};
 
     //size of the array
