@@ -8,7 +8,7 @@ numbers=(1024 2048)
 
 for number in "${numbers[@]}"
 do
-    output=$(./mergesort numbers.txt ${number} 2>> merge_error_log.txt)
+    output=$(./mergesort 16000numbers.txt ${number} 2>> merge_error_log.txt)
     echo "$output"
     echo "$output" >> output.txt
     echo "--------------------------------------"
