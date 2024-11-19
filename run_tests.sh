@@ -14,3 +14,7 @@ do
     echo "--------------------------------------"
     echo "--------------------------------------" >> output.txt
 done
+
+# Print merge_error_log.txt at the end
+echo -e "\nContent of merge_error_log.txt:"
+cat merge_error_log.txt

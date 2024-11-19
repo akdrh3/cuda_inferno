@@ -143,6 +143,12 @@ int main(int argc, char *argv[]){
     //get param from command; filename , arraysize * 1 million
     const char *file_name = argv[1];
     uint64_t size_of_array = strtoull(argv[2], NULL, 10)*1000000;
+    int number_of_thread;
+    if (sscanf(argv[3], "%d", &number_of_thread) != 1) 
+    {
+        printf("Invalid number: %s\n", argv[3]);
+        return 1; // Exit with an error code
+    }
     int *gpu_array = NULL;
     int *gpu_tmp = NULL;
     HANDLE_ERROR(cudaMallocManaged((void**)&gpu_array, size_of_array * sizeof(int)));
@@ -150,35 +156,52 @@ int main(int argc, char *argv[]){
     cudaEvent_t start, stop;
 
     //different thread number
-    int thread_numbers[5] = {128, 320, 384, 448, 576};
+    //int thread_numbers[5] = {128, 320, 384, 448, 576};
     //int thread_numbers[5] = {1, 2, 3, 4, 5};
 
     //size of the array
     double array_size_in_GB = SIZE_IN_GB(sizeof(int)*size_of_array);
     printf("Data Set Size: %f GB Number of integers : %lu\n", array_size_in_GB, size_of_array);
 
-    //run mergesort 5 times
-    for (int i = 0; i < 5; ++i){
-        int number_of_thread = thread_numbers[i];
+    //read from file and store it to gpu_array
+    read_from_file(file_name, gpu_array, size_of_array);
 
-        //read from file and store it to gpu_array
-        read_from_file(file_name, gpu_array, size_of_array);
+    //start timer
+    cuda_timer_start(&start, &stop);
+
+    //call mergesort function
+    mergesort(gpu_array, gpu_tmp, size_of_array, number_of_thread);
+
+    // Stop timer
+    double gpu_sort_time = cuda_timer_stop(start, stop);
+    double gpu_sort_time_sec = gpu_sort_time / 1000.0;
+
+    printf("Time elapsed for merge sort with %d threads: %lf s\n", number_of_thread, gpu_sort_time_sec);
+    // print_array_host(gpu_array, size_of_array);
+    // print_array_host(gpu_tmp, size_of_array);
+    // printf("-------------------------------------------------\n");
+    // //run mergesort 5 times
+    // for (int i = 0; i < 5; ++i){
+    //     int number_of_thread = thread_numbers[i];
+
+    //     //read from file and store it to gpu_array
+    //     read_from_file(file_name, gpu_array, size_of_array);
  
-        //start timer
-        cuda_timer_start(&start, &stop);
+    //     //start timer
+    //     cuda_timer_start(&start, &stop);
 
-        //call mergesort function
-        mergesort(gpu_array, gpu_tmp, size_of_array, number_of_thread);
+    //     //call mergesort function
+    //     mergesort(gpu_array, gpu_tmp, size_of_array, number_of_thread);
 
-        // Stop timer
-        double gpu_sort_time = cuda_timer_stop(start, stop);
-        double gpu_sort_time_sec = gpu_sort_time / 1000.0;
+    //     // Stop timer
+    //     double gpu_sort_time = cuda_timer_stop(start, stop);
+    //     double gpu_sort_time_sec = gpu_sort_time / 1000.0;
 
-        printf("Time elapsed for merge sort with %d threads: %lf s\n", number_of_thread, gpu_sort_time_sec);
-        // print_array_host(gpu_array, size_of_array);
-        // print_array_host(gpu_tmp, size_of_array);
-        // printf("-------------------------------------------------\n");
-    }
+    //     printf("Time elapsed for merge sort with %d threads: %lf s\n", number_of_thread, gpu_sort_time_sec);
+    //     // print_array_host(gpu_array, size_of_array);
+    //     // print_array_host(gpu_tmp, size_of_array);
+    //     // printf("-------------------------------------------------\n");
+    // }
 
 
     //free pointers
