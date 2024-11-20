@@ -161,7 +161,7 @@ int main(int argc, char *argv[]){
 
     //size of the array
     double array_size_in_GB = SIZE_IN_GB(sizeof(int)*size_of_array);
-    printf("Data Set Size: %f GB Number of integers : %lu\n", array_size_in_GB, size_of_array);
+    printf("Data Set Size: %f GB Number of integers : %lu number of threads : %d\n", array_size_in_GB, size_of_array, number_of_thread);
 
     //read from file and store it to gpu_array
     read_from_file(file_name, gpu_array, size_of_array);
