@@ -222,7 +222,7 @@ int main(int argc, char *argv[]){
     // if (isRangeSorted_cpu(gpu_array, 0, size_of_array) == 0){
     //     printf("not sorted well!\n");
     // }
-    // printf("Time elapsed for merge sort with %d threads: %lf s\n", number_of_thread, gpu_sort_time_sec);
+    printf("Time elapsed for merge sort with %d threads: %lf s\n", number_of_thread, gpu_sort_time_sec);
 
     //free pointers
     HANDLE_ERROR(cudaFree(gpu_tmp));
