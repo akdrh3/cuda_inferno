@@ -221,7 +221,6 @@ int main(int argc, char *argv[]){
     double gpu_sort_time_sec = gpu_sort_time / 1000.0;
     if (isRangeSorted_cpu(gpu_array, 0, size_of_array) == 0){
         printf("not sorted well!\n");
-        return;
     }
     printf("Time elapsed for merge sort with %d threads: %lf s\n", number_of_thread, gpu_sort_time_sec);
 
