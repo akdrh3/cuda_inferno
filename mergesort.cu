@@ -72,11 +72,11 @@ __global__ void mergesortKernel(int* arr, int* tmp, uint64_t size_of_array, uint
         } 
     }
 
-    // if (isRangeSorted(arr, start, end) == 1 || isRangeSorted(tmp, start, end) == 1  ){
-    //     //printf("tid : %lu, start: %lu, mid: %lu, end : %lu, sorted well\n", tid, start, mid, end);
-    //     return;
-    // }
-    // printf("tid : %lu, start: %lu, mid: %lu, end : %lu, not sorted well!\n", tid, start, mid, end);
+    if (isRangeSorted(arr, start, end) == 1 || isRangeSorted(tmp, start, end) == 1  ){
+        //printf("tid : %lu, start: %lu, mid: %lu, end : %lu, sorted well\n", tid, start, mid, end);
+        return;
+    }
+    printf("tid : %lu, start: %lu, mid: %lu, end : %lu, not sorted well!\n", tid, start, mid, end);
     return;
 
 }
@@ -203,10 +203,6 @@ int main(int argc, char *argv[]){
     // Stop timer
     double gpu_sort_time = cuda_timer_stop(start, stop);
     double gpu_sort_time_sec = gpu_sort_time / 1000.0;
-
-    if (isRangeSorted(gpu_array, 0, size_of_array) == 0){
-         printf("not sorted well!\n");
-    }
 
     printf("Time elapsed for merge sort with %d threads: %lf s\n", number_of_thread, gpu_sort_time_sec);
 
