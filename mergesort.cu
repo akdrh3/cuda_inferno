@@ -6,6 +6,23 @@ extern "C"{
 #include <climits>
 #include <stdio.h>
 
+int isRangeSorted(int *arr, size_t start, size_t end)
+{
+    if (start >= end) // Invalid range
+    {
+        return 1; // A single element or empty range is always sorted
+    }
+
+    for (size_t i = start + 1; i < end; ++i)
+    {
+        if (arr[i - 1] > arr[i])
+        {
+            return 0; // Found an element out of order
+        }
+    }
+    return 1; // The range is sorted
+}
+
 void swap_int_pointer(int **arr_A, int **arr_B, bool *flipped){
     //printf("swapping\n");
     int *tmp_pointer=*arr_A;
@@ -108,6 +125,11 @@ __global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, uint64
             }
         }
     }
+    if (isRangeSorted(&arr, block_start, block_end) == 1){
+        printf("tid : %lu, start: %lu, end : %lu, sorted well\n", tid, block_start, block_end);
+        return;
+    }
+    printf("tid : %lu, start: %lu, end : %lu, not sorted well!\n", tid, block_start, block_end);
     return; 
 }
 
@@ -129,7 +151,7 @@ void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread)
 
     segment_size *= 2;
 
-    while (segment_size <= size_of_array*2){
+    while (segment_size < size_of_array*2){
         printf("mergesort kernel segment_size : %lu\n",segment_size);
         mergesortKernel<<<1, number_of_thread>>>(arr, tmp, size_of_array, segment_size);
         HANDLE_ERROR(cudaDeviceSynchronize());
