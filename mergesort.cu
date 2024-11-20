@@ -186,7 +186,7 @@ int main(int argc, char *argv[]){
     HANDLE_ERROR(cudaMallocManaged((void**)&gpu_array, size_of_array * sizeof(int)));
     HANDLE_ERROR(cudaMallocManaged((void **)&gpu_tmp, size_of_array * sizeof(int)));
     cudaEvent_t start, stop;
-    
+
     //size of the array
     double array_size_in_GB = SIZE_IN_GB(sizeof(int)*size_of_array);
     printf("Data Set Size: %f GB Number of integers : %lu number of threads : %d\n", array_size_in_GB, size_of_array, number_of_thread);
@@ -204,7 +204,7 @@ int main(int argc, char *argv[]){
     double gpu_sort_time = cuda_timer_stop(start, stop);
     double gpu_sort_time_sec = gpu_sort_time / 1000.0;
 
-    if (isRangeSorted(gpu_array, start, end) == 0){
+    if (isRangeSorted(gpu_array, 0, size_of_array) == 0){
          printf("not sorted well!\n");
     }
 
