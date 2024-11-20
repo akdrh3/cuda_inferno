@@ -23,6 +23,22 @@ __device__ int isRangeSorted(int *arr, size_t start, size_t end)
     return 1; // The range is sorted
 }
 
+int isRangeSorted_cpu(int *arr, size_t start, size_t end)
+{
+    if (start >= end) // Invalid range
+    {
+        return 1; // A single element or empty range is always sorted
+    }
+
+    for (size_t i = start + 1; i < end; ++i)
+    {
+        if (arr[i - 1] > arr[i])
+        {
+            return 0; // Found an element out of order
+        }
+    }
+    return 1; // The range is sorted
+}
 void swap_int_pointer(int **arr_A, int **arr_B, bool *flipped){
     //printf("swapping\n");
     int *tmp_pointer=*arr_A;
@@ -72,11 +88,11 @@ __global__ void mergesortKernel(int* arr, int* tmp, uint64_t size_of_array, uint
         } 
     }
 
-    if (isRangeSorted(arr, start, end) == 1 || isRangeSorted(tmp, start, end) == 1  ){
-        //printf("tid : %lu, start: %lu, mid: %lu, end : %lu, sorted well\n", tid, start, mid, end);
-        return;
-    }
-    printf("tid : %lu, start: %lu, mid: %lu, end : %lu, not sorted well!\n", tid, start, mid, end);
+    // if (isRangeSorted(arr, start, end) == 1 || isRangeSorted(tmp, start, end) == 1  ){
+    //     //printf("tid : %lu, start: %lu, mid: %lu, end : %lu, sorted well\n", tid, start, mid, end);
+    //     return;
+    // }
+    // printf("tid : %lu, start: %lu, mid: %lu, end : %lu, not sorted well!\n", tid, start, mid, end);
     return;
 
 }
@@ -203,7 +219,10 @@ int main(int argc, char *argv[]){
     // Stop timer
     double gpu_sort_time = cuda_timer_stop(start, stop);
     double gpu_sort_time_sec = gpu_sort_time / 1000.0;
-
+    if (isRangeSorted_cpu(gpu_array, 0, size_of_array) == 0){
+        printf("not sorted well!\n");
+        return;
+    }
     printf("Time elapsed for merge sort with %d threads: %lf s\n", number_of_thread, gpu_sort_time_sec);
 
     //free pointers
