@@ -155,8 +155,6 @@ void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread)
         return;
     }
 
-    segment_size *= 2;
-
     while (segment_size < size_of_array*2){
         printf("mergesort kernel segment_size : %lu\n",segment_size);
         mergesortKernel<<<1, number_of_thread>>>(arr, tmp, size_of_array, segment_size);
