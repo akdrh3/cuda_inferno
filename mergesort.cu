@@ -6,7 +6,7 @@ extern "C"{
 #include <climits>
 #include <stdio.h>
 
-int isRangeSorted(int *arr, size_t start, size_t end)
+__device__ int isRangeSorted(int *arr, size_t start, size_t end)
 {
     if (start >= end) // Invalid range
     {
