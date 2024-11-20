@@ -72,11 +72,11 @@ __global__ void mergesortKernel(int* arr, int* tmp, uint64_t size_of_array, uint
         } 
     }
 
-    if (isRangeSorted(arr, start, end) == 1 || isRangeSorted(tmp, start, end) == 1  ){
-        //printf("tid : %lu, start: %lu, mid: %lu, end : %lu, sorted well\n", tid, start, mid, end);
-        return;
-    }
-    printf("tid : %lu, start: %lu, mid: %lu, end : %lu, not sorted well!\n", tid, start, mid, end);
+    // if (isRangeSorted(arr, start, end) == 1 || isRangeSorted(tmp, start, end) == 1  ){
+    //     //printf("tid : %lu, start: %lu, mid: %lu, end : %lu, sorted well\n", tid, start, mid, end);
+    //     return;
+    // }
+    // printf("tid : %lu, start: %lu, mid: %lu, end : %lu, not sorted well!\n", tid, start, mid, end);
     return;
 
 }
@@ -131,11 +131,11 @@ __global__ void initial_merge(int* arr, int* tmp, uint64_t size_of_array, uint64
             }
         }
     }
-    if (isRangeSorted(arr, block_start, block_end) == 1){
-        //printf("tid : %lu, start: %lu, end : %lu, sorted well\n", tid, block_start, block_end);
-        return;
-    }
-    printf("tid : %lu, start: %lu, end : %lu, not sorted well!\n", tid, block_start, block_end);
+    // if (isRangeSorted(arr, block_start, block_end) == 1){
+    //     //printf("tid : %lu, start: %lu, end : %lu, sorted well\n", tid, block_start, block_end);
+    //     return;
+    // }
+    // printf("tid : %lu, start: %lu, end : %lu, not sorted well!\n", tid, block_start, block_end);
     return; 
 }
 
@@ -146,7 +146,7 @@ void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread)
     
 
     //sort the smallest portion of the sorting
-    printf("initial merge segment_size : %lu\n",segment_size);
+    //printf("initial merge segment_size : %lu\n",segment_size);
     initial_merge<<<1, number_of_thread>>>(arr, tmp, size_of_array, segment_size);
     HANDLE_ERROR(cudaDeviceSynchronize());
     //now it is sure that the smallest segments are sorted
@@ -156,12 +156,12 @@ void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread)
     }
 
     while (segment_size < size_of_array*2){
-        printf("mergesort kernel segment_size : %lu\n",segment_size);
+        //printf("mergesort kernel segment_size : %lu\n",segment_size);
         mergesortKernel<<<1, number_of_thread>>>(arr, tmp, size_of_array, segment_size);
         HANDLE_ERROR(cudaDeviceSynchronize());
         swap_int_pointer(&arr, &tmp, &flipped);
         segment_size *= 2;
-        printf("-----------------------------------------------\n");
+        //printf("-----------------------------------------------\n");
     }
 
     if (flipped == true){
@@ -186,11 +186,7 @@ int main(int argc, char *argv[]){
     HANDLE_ERROR(cudaMallocManaged((void**)&gpu_array, size_of_array * sizeof(int)));
     HANDLE_ERROR(cudaMallocManaged((void **)&gpu_tmp, size_of_array * sizeof(int)));
     cudaEvent_t start, stop;
-
-    //different thread number
-    //int thread_numbers[5] = {128, 320, 384, 448, 576};
-    //int thread_numbers[5] = {1, 2, 3, 4, 5};
-
+    
     //size of the array
     double array_size_in_GB = SIZE_IN_GB(sizeof(int)*size_of_array);
     printf("Data Set Size: %f GB Number of integers : %lu number of threads : %d\n", array_size_in_GB, size_of_array, number_of_thread);
@@ -208,33 +204,11 @@ int main(int argc, char *argv[]){
     double gpu_sort_time = cuda_timer_stop(start, stop);
     double gpu_sort_time_sec = gpu_sort_time / 1000.0;
 
+    if (isRangeSorted(gpu_array, start, end) == 0){
+         printf("not sorted well!\n");
+    }
+
     printf("Time elapsed for merge sort with %d threads: %lf s\n", number_of_thread, gpu_sort_time_sec);
-    // print_array_host(gpu_array, size_of_array);
-    // print_array_host(gpu_tmp, size_of_array);
-    // printf("-------------------------------------------------\n");
-    // //run mergesort 5 times
-    // for (int i = 0; i < 5; ++i){
-    //     int number_of_thread = thread_numbers[i];
-
-    //     //read from file and store it to gpu_array
-    //     read_from_file(file_name, gpu_array, size_of_array);
- 
-    //     //start timer
-    //     cuda_timer_start(&start, &stop);
-
-    //     //call mergesort function
-    //     mergesort(gpu_array, gpu_tmp, size_of_array, number_of_thread);
-
-    //     // Stop timer
-    //     double gpu_sort_time = cuda_timer_stop(start, stop);
-    //     double gpu_sort_time_sec = gpu_sort_time / 1000.0;
-
-    //     printf("Time elapsed for merge sort with %d threads: %lf s\n", number_of_thread, gpu_sort_time_sec);
-    //     // print_array_host(gpu_array, size_of_array);
-    //     // print_array_host(gpu_tmp, size_of_array);
-    //     // printf("-------------------------------------------------\n");
-    // }
-
 
     //free pointers
     HANDLE_ERROR(cudaFree(gpu_tmp));
