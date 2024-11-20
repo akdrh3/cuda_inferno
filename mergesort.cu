@@ -163,12 +163,13 @@ void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread)
         HANDLE_ERROR(cudaDeviceSynchronize());
         swap_int_pointer(&arr, &tmp, &flipped);
         segment_size *= 2;
-        printf("-----------------------------------------------\n")
+        printf("-----------------------------------------------\n");
     }
 
     if (flipped == true){
         swap_int_pointer(&arr, &tmp, &flipped);
     }
+    return;
 }
 
 
