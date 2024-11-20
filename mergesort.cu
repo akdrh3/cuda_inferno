@@ -73,10 +73,10 @@ __global__ void mergesortKernel(int* arr, int* tmp, uint64_t size_of_array, uint
     }
 
     if (isRangeSorted(arr, start, end) == 1){
-        printf("tid : %lu, start: %lu, mid: %lu end : %lu, sorted well\n", tid, start, mid, end);
+        printf("tid : %lu, start: %lu, mid: %lu, end : %lu, sorted well\n", tid, start, mid, end);
         return;
     }
-    printf("tid : %lu, start: %lu, end : %lu, not sorted well!\n", tid, start, end);
+    printf("tid : %lu, start: %lu, mid: %lu, end : %lu, not sorted well!\n", tid, start, mid, end);
     return;
 
 }
