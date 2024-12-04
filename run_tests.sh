@@ -8,8 +8,8 @@ fi
 
 # numbers=(1 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384)
 # Initialize variables
-numbers=(256 512 1024 2048)
-threads=(256)
+numbers=(32 64 128 256 512 1024 2048)
+threads=(1 256 512 768 1024)
 
 # Clear log files
 > merge_error_log.txt
