@@ -184,8 +184,8 @@ void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread)
 
     // sort the smallest portion of the sorting
     // printf("initial merge segment_size : %lu\n",segment_size);
-    cuda_timer_start(&start, &stop)
-        initial_merge<<<1, number_of_thread>>>(arr, tmp, size_of_array, segment_size);
+    cuda_timer_start(&start, &stop);
+    initial_merge<<<1, number_of_thread>>>(arr, tmp, size_of_array, segment_size);
     HANDLE_ERROR(cudaDeviceSynchronize());
     double gpu_sort_time = cuda_timer_stop(start, stop);
     double gpu_sort_time_sec = gpu_sort_time / 1000.0;
