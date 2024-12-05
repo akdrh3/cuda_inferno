@@ -176,6 +176,7 @@ __global__ void initial_merge(int *arr, int *tmp, uint64_t size_of_array, uint64
 
 void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread)
 {
+    cudaEvent_t start, stop;
     // calculate the array size that initially goes into each thread
     uint64_t segment_size = (uint64_t)ceil((double)size_of_array / number_of_thread);
     bool flipped = false;
