@@ -213,7 +213,7 @@ void mergesort(int *arr, int *tmp, uint64_t size_of_array, int number_of_thread)
     {
         swap_int_pointer(&arr, &tmp, &flipped);
     }
-    printf("number of times kernel calld after the itial batch sort: %d", kernel_called);
+    printf("number of times kernel calld after the itial batch sort: %d\n\n", kernel_called);
     return;
 }
 
