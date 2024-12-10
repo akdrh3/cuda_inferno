@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
 {
     // get param from command; filename , arraysize * 1 million
     const char *file_name = argv[1];
-    uint64_t input_size = strtoull(argv[2], NULL, 10) * 100;
+    uint64_t input_size = strtoull(argv[2], NULL, 10) * 1000000;
     int *host_a = (int *)malloc(sizeof(int) * input_size);
     if (host_a == NULL)
     {
