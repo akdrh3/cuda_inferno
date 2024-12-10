@@ -11,7 +11,7 @@ void print_array_host(int *array, int64_t array_size)
     printf("\n");
 }
 
-void read_from_file_cpu(char *file_name, int *numbers, uint64_t size_of_array)
+void read_from_file_cpu(const char *file_name, int *numbers, uint64_t size_of_array)
 {
     FILE *file = fopen(file_name, "r");
     if (file == NULL)
