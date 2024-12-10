@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
         cudaStream_t stream_used = (i % 2 == 0) ? stream2 : stream1;
 
         memcpy(host_a_dst, host_a_src, bytes);
+        printf("%d\n", *host_a_dst);
 
         HANDLE_ERROR(cudaMemcpyAsync(d_dst, host_a_dst, bytes, cudaMemcpyHostToDevice, stream_used));
     }
