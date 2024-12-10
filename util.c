@@ -22,9 +22,24 @@ void read_from_file_cpu(const char *file_name, int *numbers, uint64_t size_of_ar
 
     for (uint64_t i = 0; i < size_of_array; i++)
     {
-        if (fscanf(file, "%d", numbers[i]) == EOF)
+        int ret = fscanf(file, "%d", &numbers[i]);
+        if (ret == EOF)
         {
-            perror("Error reading from file");
+            if (feof(file)) // Check if end of file is reached
+            {
+                fprintf(stderr, "End of file reached after reading %lu numbers, expected %lu.\n", i, size_of_array);
+            }
+            else
+            {
+                perror("Error reading from file");
+            }
+            fclose(file);
+            exit(EXIT_FAILURE);
+        }
+        else if (ret != 1)
+        {
+            fprintf(stderr, "Failed to read an integer from file, received %d from fscanf.\n", ret);
+            fclose(file);
             exit(EXIT_FAILURE);
         }
     }
