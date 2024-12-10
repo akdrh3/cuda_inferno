@@ -26,6 +26,8 @@ int main(int argc, char *argv[])
 
     int *h_aPinned;
     HANDLE_ERROR(cudaMallocHost((void **)&h_aPinned, sizeof(int) * pinned_size));
+    read_from_file_cpu(file_name, h_aPinned, pinned_size);
+    print_array_host(h_aPinned, pinned_size);
 
     int *d_a;
     HANDLE_ERROR(cudaMalloc((void **)&d_a, sizeof(int) * input_size));
@@ -37,8 +39,6 @@ int main(int argc, char *argv[])
     for (size_t i = 0; i < numChunks; i++)
     {
         cudaStream_t current_stream = (i % 2 == 0) ? stream1 : stream2;
-        int stream_num = (i % 2 == 0) ? 1 : 2;
-        printf("current stream : stream%d\n", stream_num);
     }
 
     free(host_a);
