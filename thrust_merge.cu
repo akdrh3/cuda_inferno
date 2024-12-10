@@ -25,14 +25,21 @@ int main(int argc, char *argv[])
     size_t numChunks = input_size / pinned_size;
 
     int *h_aPinned;
-    HANDLE_ERROR(cudaMallocHost((void **)&h_aPinned, pinned_size));
+    HANDLE_ERROR(cudaMallocHost((void **)&h_aPinned, sizeof(int) * pinned_size));
 
     int *d_a;
-    HANDLE_ERROR(cudaMalloc((void **)&d_a, input_size));
+    HANDLE_ERROR(cudaMalloc((void **)&d_a, sizeof(int) * input_size));
 
     cudaStream_t stream1, stream2;
     cudaStreamCreate(&stream1);
     cudaStreamCreate(&stream2);
+
+    for (size_t i = 0; i < numChunks; i++)
+    {
+        cudaStream_t current_stream = (i % 2 == 0) ? stream1 : stream2;
+        int stream_num = (i % 2 == 0) ? 1 : 2;
+        printf("current stream : stream%d\n", stream_num);
+    }
 
     free(host_a);
     cudaFreeHost(h_aPinned);
