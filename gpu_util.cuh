@@ -9,3 +9,4 @@ __device__ void print_array_device(int *array, int64_t array_size);
 __host__ void HandleError(cudaError_t err, const char *file, int line);
 __host__ void cuda_timer_start(cudaEvent_t *start, cudaEvent_t *stop);
 __host__ float cuda_timer_stop(cudaEvent_t start, cudaEvent_t stop);
+__device__ int isRangeSorted(int *arr, size_t start, size_t end);

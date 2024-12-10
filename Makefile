@@ -10,7 +10,7 @@ CUDEPS = gpu_util.cuh
 OBJS = util.o gpu_util.o
 
 # Output
-MERGESORT_OUTPUT = mergesort
+MERGESORT_OUTPUT = thrust_merge
 
 # Rules
 all: $(MERGESORT_OUTPUT)
@@ -21,8 +21,8 @@ all: $(MERGESORT_OUTPUT)
 %.o: %.cu $(CUDEPS)
 	$(NVCC) $(NVCCFLAGS) -dc -o $@ $<
 
-mergesort: mergesort.o $(OBJS)
-	$(NVCC) -o mergesort mergesort.o util.o gpu_util.o -lcudart
+mergesort: thrust_merge.o $(OBJS)
+	$(NVCC) -o thrust_merge thrust_merge.o util.o gpu_util.o -lcudart
 
 clean:
 	rm -f *.o $(MERGESORT_OUTPUT) 
