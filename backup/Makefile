@@ -21,10 +21,10 @@ all: $(MERGESORT_OUTPUT)
 %.o: %.cu $(CUDEPS)
 	$(NVCC) $(NVCCFLAGS) -dc -o $@ $<
 
-thrust_merge: thrust_merge.o $(OBJS)
-	$(NVCC) -o thrust_merge thrust_merge.o util.o gpu_util.o -lcudart -lstdc++
+mergesort: thrust_merge.o $(OBJS)
+	$(NVCC) -o thrust_merge thrust_merge.o util.o gpu_util.o -lcudart
 
 clean:
-	rm -f *.o $(MERGESORT_OUTPUT)
+	rm -f *.o $(MERGESORT_OUTPUT) 
 
 .PHONY: clean
