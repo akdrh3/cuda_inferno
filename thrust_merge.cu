@@ -24,10 +24,9 @@ int main(int argc, char *argv[])
     size_t pinned_size = 1000000; // Limited by pinned memory size
     size_t numChunks = input_size / pinned_size;
 
-    int *h_aPinned;
+    int *h_aPinned, *h_bPinned;
     HANDLE_ERROR(cudaMallocHost((void **)&h_aPinned, sizeof(int) * pinned_size));
-    read_from_file_cpu(file_name, h_aPinned, pinned_size);
-    print_array_host(h_aPinned, 10);
+    HANDLE_ERROR(cudaMallocHost((void **)&h_bPinned, sizeof(int) * pinned_size));
 
     int *d_a;
     HANDLE_ERROR(cudaMalloc((void **)&d_a, sizeof(int) * input_size));
@@ -38,7 +37,19 @@ int main(int argc, char *argv[])
 
     for (size_t i = 0; i < numChunks; i++)
     {
-        cudaStream_t current_stream = (i % 2 == 0) ? stream1 : stream2;
+        size_t bytes = (i < numChunks - 1) ? pinned_size : (input_size % pinned_size);
+        size_t offset = i * pinned_size;
+
+        int *host_a_src = host_a + offset;
+        int *host_a_dst = (i % 2 == 0) ? h_aPinned : h_bPinned;
+        int *d_dst = d_a + offset;
+
+        cudaStream_t stream_used = (i % 2 == 0) ? stream2 : stream1;
+
+        memcpy(host_a_src, host_a_dst, pinned_size);
+
+        HANDLE_ERROR(cudaMemcpyAsync(d_dst, host_a_dst, sizeof(int) * bytes, cudaMemcpyHostToDevice, stream_used));
+        printf("%d\n", host_a_dst[-1]);
     }
 
     free(host_a);
