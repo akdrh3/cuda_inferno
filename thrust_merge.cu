@@ -61,9 +61,9 @@ int main(int argc, char *argv[])
         printf("numChunks = %zu, i = %d, leftsize = %zu, offset = %zu\n", numChunks, i, left_size, offset);
 
         memcpy(currentPinnedMem, host_a + offset, left_size * sizeof(int));
+        print_array_host(currentPinnedMem, left_size);
         printf("done memcpy\n\n");
         HANDLE_ERROR(cudaMemcpyAsync(d_a + offset, currentPinnedMem, left_size * sizeof(int), cudaMemcpyHostToDevice, currentStream));
-        HANDLE_ERROR(cudaStreamSynchronize(currentStream));
         dev_ptr = thrust::device_pointer_cast(d_a + offset);
         thrust::sort(thrust::cuda::par.on(currentStream), dev_ptr, dev_ptr + left_size);
         HANDLE_ERROR(cudaStreamSynchronize(currentStream));
