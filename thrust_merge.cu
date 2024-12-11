@@ -48,17 +48,29 @@ int main(int argc, char *argv[])
     HANDLE_ERROR(cudaStreamCreate(&stream3));
     HANDLE_ERROR(cudaStreamCreate(&stream4));
     thrust::device_ptr<int> dev_ptr;
+    cudaEvent_t event;
+    cudaEventCreate(&event);
+    print_array_host(host_a, 10);
 
-    for (size_t i = 0; i < numChunks; i++)
+    for (int i = 0; i < numChunks; i++)
     {
+        size_t left_size = (i < numChunks - 1) ? pinned_size : (input_size % pinned_size);
+        cudaStream_t currentStream = (i % 2 == 0) ? stream1 : stream2;
+        int *currentPinnedMem = (i % 2 == 0) ? h_aPinned : h_bPinned;
         size_t offset = i * pinned_size;
-        size_t size = (i == numChunks - 1) ? (input_size - offset) : pinned_size;
-        cudaMemcpyAsync(h_aPinned, host_a + offset, size * sizeof(int), cudaMemcpyHostToHost, stream1);
-        cudaMemcpyAsync(d_a + offset, h_aPinned, size * sizeof(int), cudaMemcpyHostToDevice, stream1);
-        dev_ptr = thrust::device_pointer_cast(d_a + offset); // Reassign dev_ptr for each chunk
-        thrust::sort(thrust::cuda::par.on(stream1), dev_ptr, dev_ptr + size);
-        cudaMemcpyAsync(host_b + offset, d_a + offset, size * sizeof(int), cudaMemcpyDeviceToHost, stream1);
+
+        memcpy(currentPinnedMem, host_a + offset, left_size * sizeof(int));
+        HANDLE_ERROR(cudaMemcpyAsync(d_a + offset, currentPinnedMem, left_size * sizeof(int), cudaMemcpyHostToDevice, currentStream));
     }
+    print_array_device(d_a, 10);
+
+    // dev_ptr = thrust::device_pointer_cast(d_a);
+    // thrust::sort(thrust::cuda::par.on(stream1), dev_ptr, dev_ptr + pinned_size);
+    // cudaEventRecord(event, stream1);
+    // cudaStreamWaitEvent(stream3, event);
+    // HANDLE_ERROR(cudaMemcpyAsync(h_cPinned, d_a, pinned_size * sizeof(int), cudaMemcpyDeviceToHost, stream3));
+    // HANDLE_ERROR(cudaStreamSynchronize(stream3));
+    // memcpy(host_b, h_cPinned, pinned_size * sizeof(int));
 
     free(host_a);
     cudaFreeHost(h_aPinned);
