@@ -53,40 +53,40 @@ int main(int argc, char *argv[])
 
     memcpy(h_bPinned, host_a + pinned_size, pinned_size * sizeof(int));
     HANDLE_ERROR(cudaMemcpyAsync(d_a, h_aPinned, pinned_size * sizeof(int), cudaMemcpyHostToDevice, stream1));
-    thrust::dev_ptr<int> dev_ptr = thrust::device_pointer_cast(d_a);
+    thrust::device_ptr<int> dev_ptr = thrust::device_pointer_cast(d_a);
     thrust::sort(thrust::cuda::par.on(stream1), dev_ptr, dev_ptr + pinned_size);
     HANDLE_ERROR(cudaMemcpyAsync(h_cPinned, d_a, pinned_size * sizeof(int), cudaMemcpyDeviceToHost, stream3));
 
     memcpy(h_aPinned, host_a + pinned_size * 2, pinned_size * sizeof(int));
     HANDLE_ERROR(cudaMemcpyAsync(d_a + pinned_size, h_bPinned, pinned_size * sizeof(int), cudaMemcpyHostToDevice, stream2));
-    thrust::dev_ptr<int> dev_ptr = thrust::device_pointer_cast(d_a + pinned_size);
+    thrust::device_ptr<int> dev_ptr = thrust::device_pointer_cast(d_a + pinned_size);
     thrust::sort(thrust::cuda::par.on(stream2), dev_ptr, dev_ptr + pinned_size);
     HANDLE_ERROR(cudaMemcpyAsync(h_dPinned, d_a + pinned_size, pinned_size * sizeof(int), cudaMemcpyDeviceToHost, stream4));
     memcpy(host_b, h_cPinned, pinned_size * sizeof(int));
 
     memcpy(h_bPinned, host_a + pinned_size * 3, pinned_size * sizeof(int));
     HANDLE_ERROR(cudaMemcpyAsync(d_a + pinned_size * 2, h_aPinned, pinned_size * sizeof(int), cudaMemcpyHostToDevice, stream1));
-    thrust::dev_ptr<int> dev_ptr = thrust::device_pointer_cast(d_a + pinned_size * 2);
+    thrust::device_ptr<int> dev_ptr = thrust::device_pointer_cast(d_a + pinned_size * 2);
     thrust::sort(thrust::cuda::par.on(stream1), dev_ptr, dev_ptr + pinned_size);
     HANDLE_ERROR(cudaMemcpyAsync(h_cPinned, d_a + pinned_size * 2, pinned_size * sizeof(int), cudaMemcpyDeviceToHost, stream3));
     memcpy(host_b + pinned_size, h_dPinned, pinned_size * sizeof(int));
 
     memcpy(h_aPinned, host_a + pinned_size * 4, pinned_size * sizeof(int));
     HANDLE_ERROR(cudaMemcpyAsync(d_a + pinned_size * 3, h_bPinned, pinned_size * sizeof(int), cudaMemcpyHostToDevice, stream2));
-    thrust::dev_ptr<int> dev_ptr = thrust::device_pointer_cast(d_a + pinned_size * 3);
+    thrust::device_ptr<int> dev_ptr = thrust::device_pointer_cast(d_a + pinned_size * 3);
     thrust::sort(thrust::cuda::par.on(stream2), dev_ptr, dev_ptr + pinned_size);
     HANDLE_ERROR(cudaMemcpyAsync(h_dPinned, d_a + pinned_size * 3, pinned_size * sizeof(int), cudaMemcpyDeviceToHost, stream4));
     memcpy(host_b + pinned_size * 2, h_cPinned, pinned_size * sizeof(int));
 
     memcpy(h_bPinned, host_a + pinned_size * 5, pinned_size * sizeof(int));
     HANDLE_ERROR(cudaMemcpyAsync(d_a + pinned_size * 4, h_aPinned, pinned_size * sizeof(int), cudaMemcpyHostToDevice, stream1));
-    thrust::dev_ptr<int> dev_ptr = thrust::device_pointer_cast(d_a + pinned_size * 4);
+    thrust::device_ptr<int> dev_ptr = thrust::device_pointer_cast(d_a + pinned_size * 4);
     thrust::sort(thrust::cuda::par.on(stream1), dev_ptr, dev_ptr + pinned_size);
     HANDLE_ERROR(cudaMemcpyAsync(h_cPinned, d_a + pinned_size * 4, pinned_size * sizeof(int), cudaMemcpyDeviceToHost, stream3));
     memcpy(host_b + pinned_size * 3, h_dPinned, pinned_size * sizeof(int));
 
     HANDLE_ERROR(cudaMemcpyAsync(d_a + pinned_size * 5, h_bPinned, pinned_size * sizeof(int), cudaMemcpyHostToDevice, stream2));
-    thrust::dev_ptr<int> dev_ptr = thrust::device_pointer_cast(d_a + pinned_size * 5);
+    thrust::device_ptr<int> dev_ptr = thrust::device_pointer_cast(d_a + pinned_size * 5);
     thrust::sort(thrust::cuda::par.on(stream2), dev_ptr, dev_ptr + pinned_size);
     HANDLE_ERROR(cudaMemcpyAsync(h_dPinned, d_a + pinned_size * 5, pinned_size * sizeof(int), cudaMemcpyDeviceToHost, stream4));
     memcpy(host_b + pinned_size * 4, h_cPinned, pinned_size * sizeof(int));
