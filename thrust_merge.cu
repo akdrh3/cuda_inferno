@@ -65,8 +65,8 @@ int main(int argc, char *argv[])
         HANDLE_ERROR(cudaMemcpyAsync(d_a + offset, currentPinnedMem, left_size * sizeof(int), cudaMemcpyHostToDevice, currentStream));
     }
     HANDLE_ERROR(cudaDeviceSynchronize());
-    HANDLE_ERROR(cudaStreamSynchronize(streams1));
-    HANDLE_ERROR(cudaStreamSynchronize(streams2));
+    HANDLE_ERROR(cudaStreamSynchronize(stream1));
+    HANDLE_ERROR(cudaStreamSynchronize(stream2));
     HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size, cudaMemcpyDeviceToHost));
     HANDLE_ERROR(cudaDeviceSynchronize());
     print_array_host(host_b, input_size);
