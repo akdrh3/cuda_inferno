@@ -64,8 +64,11 @@ int main(int argc, char *argv[])
         printf("done memcpy\n\n");
         HANDLE_ERROR(cudaMemcpyAsync(d_a + offset, currentPinnedMem, left_size * sizeof(int), cudaMemcpyHostToDevice, currentStream));
     }
-    cudaDeviceSynchronize();
+    HANDLE_ERROR(cudaDeviceSynchronize());
+    HANDLE_ERROR(cudaStreamSynchronize(streams1));
+    HANDLE_ERROR(cudaStreamSynchronize(streams2));
     HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size, cudaMemcpyDeviceToHost));
+    HANDLE_ERROR(cudaDeviceSynchronize());
     print_array_host(host_b, input_size);
 
     // dev_ptr = thrust::device_pointer_cast(d_a);
