@@ -92,6 +92,7 @@ int main(int argc, char *argv[])
     memcpy(host_b + pinned_size * 4, h_cPinned, pinned_size * sizeof(int));
 
     memcpy(host_b + pinned_size * 5, h_dPinned, pinned_size * sizeof(int));
+    printf("%d, %d\n", host_b[0], host_b[-1]);
 
     free(host_a);
     cudaFreeHost(h_aPinned);
