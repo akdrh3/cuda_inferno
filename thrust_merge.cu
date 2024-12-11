@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
     const char *file_name = argv[1];
     // uint64_t input_size = strtoull(argv[2], NULL, 10) * 1000000;
-    uint64_t input_size = 6000000;
+    uint64_t input_size = 63;
     int *host_a = (int *)malloc(sizeof(int) * input_size);
     int *host_b = (int *)malloc(sizeof(int) * input_size);
     if (host_a == NULL || host_b == NULL)
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     }
     read_from_file_cpu(file_name, host_a, input_size);
 
-    size_t pinned_size = 1000000; // Limited by pinned memory size
+    size_t pinned_size = 10; // Limited by pinned memory size
     size_t numChunks = (input_size + pinned_size - 1) / pinned_size;
 
     int *h_aPinned, *h_bPinned, *h_cPinned, *h_dPinned;
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     thrust::device_ptr<int> dev_ptr;
     cudaEvent_t event;
     cudaEventCreate(&event);
-    print_array_host(host_a, 10);
+    print_array_host(host_a, input_size);
 
     for (int i = 0; i < numChunks; i++)
     {
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
         HANDLE_ERROR(cudaMemcpyAsync(d_a + offset, currentPinnedMem, left_size * sizeof(int), cudaMemcpyHostToDevice, currentStream));
     }
     HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size, cudaMemcpyDeviceToHost));
-    print_array_host(host_b, 10);
+    print_array_host(host_b, input_size);
 
     // dev_ptr = thrust::device_pointer_cast(d_a);
     // thrust::sort(thrust::cuda::par.on(stream1), dev_ptr, dev_ptr + pinned_size);
