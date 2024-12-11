@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
         printf("done memcpy\n\n");
         HANDLE_ERROR(cudaMemcpyAsync(d_a + offset, currentPinnedMem, left_size * sizeof(int), cudaMemcpyHostToDevice, currentStream));
     }
+    cudaDeviceSynchronize();
     HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size, cudaMemcpyDeviceToHost));
     print_array_host(host_b, input_size);
 
