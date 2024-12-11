@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
     HANDLE_ERROR(cudaStreamCreate(&stream2));
     HANDLE_ERROR(cudaStreamCreate(&stream3));
     HANDLE_ERROR(cudaStreamCreate(&stream4));
+    thrust::device_ptr<int> dev_ptr;
 
     for (size_t i = 0; i < numChunks; i++)
     {
