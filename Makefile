@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -c -std=c99 -Wall -Wextra -I.
+CFLAGS = -c -std=c99 -Wall -Wextra -I -fopenmp
 NVCC = /usr/local/cuda/bin/nvcc
 NVCCFLAGS = -c -rdc=true
 
