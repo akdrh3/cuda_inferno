@@ -92,19 +92,25 @@ int main(int argc, char *argv[])
     std::vector<int> merged_result(input_size);
     uint64_t current_offset = 0;
 
-    for (uint64_t i = 0; i < numChunks - 1; i++)
-    {
-        uint64_t left_size = std::min(pinned_size, input_size - current_offset);
-        uint64_t next_offset = current_offset + left_size;
-        uint64_t next_size = std::min(pinned_size, input_size - next_offset);
 
-        std::merge(host_b + current_offset,
-                   host_b + current_offset + left_size,
-                   host_b + next_offset,
-                   host_b + next_offset + next_size,
-                   merged_result.begin() + current_offset);
-        current_offset += left_size;
-    }
+    // for (uint64_t i = 0; i < numChunks - 1; i++)
+    // {
+    //     uint64_t left_size = std::min(pinned_size, input_size - current_offset);
+    //     uint64_t next_offset = current_offset + left_size;
+    //     uint64_t next_size = std::min(pinned_size, input_size - next_offset);
+
+    //     std::merge(host_b + current_offset,
+    //                host_b + current_offset + left_size,
+    //                host_b + next_offset,
+    //                host_b + next_offset + next_size,
+    //                merged_result.begin() + current_offset);
+    //     current_offset += left_size;
+    // }
+
+
+    // Start CPU final sort in parallel with GPU
+    cuda_timer_start(&cpu_start, &cpu_stop);
+    __gnu_parallel::sort(host_b, host_b + input_size);
     double cpu_time = cuda_timer_stop(cpu_start, cpu_stop) / 1000.0;
 
     double total_time = cuda_timer_stop(start, stop) / 1000.0;
