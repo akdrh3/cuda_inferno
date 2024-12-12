@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     // }
 
     const char *file_name = argv[1];
-    uint64_t input_size = strtoull(argv[2], NULL, 10) * 1000000;
+    uint64_t input_size = strtoull(argv[2], NULL, 10) * 10;
     int *host_a = (int *)malloc(sizeof(int) * input_size);
     int *host_b = (int *)malloc(sizeof(int) * input_size);
     if (host_a == NULL || host_b == NULL)
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     }
     read_from_file_cpu(file_name, host_a, input_size);
 
-    size_t pinned_size = 1000000; // Limited by pinned memory size
+    size_t pinned_size = 10; // Limited by pinned memory size
     size_t numChunks = (input_size + pinned_size - 1) / pinned_size;
 
     int *h_aPinned, *h_bPinned, *h_cPinned, *h_dPinned;
@@ -68,6 +68,7 @@ int main(int argc, char *argv[])
         int *writingBackPinnedMem = (i % 2 == 0) ? h_cPinned : h_dPinned;
 
         memcpy(currentPinnedMem, host_a + offset, left_size * sizeof(int));
+        print_array_host(host_a + offset, left_size);
         HANDLE_ERROR(cudaMemcpy(d_a + offset, currentPinnedMem, left_size * sizeof(int), cudaMemcpyHostToDevice));
         dev_ptr = thrust::device_pointer_cast(d_a + offset);
         thrust::sort(thrust::cuda::par.on(currentStream), dev_ptr, dev_ptr + left_size);
@@ -76,7 +77,8 @@ int main(int argc, char *argv[])
         HANDLE_ERROR(cudaMemcpyAsync(writingBackPinnedMem, d_a + offset, left_size * sizeof(int), cudaMemcpyDeviceToHost, dtohStream));
         HANDLE_ERROR(cudaStreamSynchronize(dtohStream));
         memcpy(host_b + offset, writingBackPinnedMem, left_size * sizeof(int));
-        printf("gpu sorted : %d \n", isRangeSorted_cpu(host_b, offset, offset + left_size - 1));
+        print_array_host(host_b + offset, left_size);
+        // printf("gpu sorted : %d \n", isRangeSorted_cpu(host_b, offset, offset + left_size - 1));
     }
     double gpu_time = cuda_timer_stop(gpu_start, gpu_stop) / 1000.0;
 
