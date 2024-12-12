@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <omp.h>
 
 #define SIZE_IN_GB(x) ((double)x / (1024.0 * 1024.0 * 1024.0))
 #define SIZE_IN_MB(x) ((double)x / (1024.0 * 1024.0))
