@@ -75,6 +75,8 @@ int main(int argc, char *argv[])
     print_array_host(host_b, pinned_size - 1);
     printf("sorted : %d \n", isRangeSorted_cpu(host_b, 0, 9));
 
+    __gnu_parallel::sort(host_b, host_b + input_size);
+
     // dev_ptr = thrust::device_pointer_cast(d_a);
     // thrust::sort(thrust::cuda::par.on(stream1), dev_ptr, dev_ptr + pinned_size);
     // cudaEventRecord(event, stream1);
