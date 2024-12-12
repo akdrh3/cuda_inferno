@@ -11,6 +11,7 @@ OBJS = util.o gpu_util.o
 
 # Output
 MERGESORT_OUTPUT = thrust_merge
+BASELINE_OUTPUT = baseline
 
 # Rules
 all: $(MERGESORT_OUTPUT)
