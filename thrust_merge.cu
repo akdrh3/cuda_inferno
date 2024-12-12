@@ -82,6 +82,8 @@ int main(int argc, char *argv[])
     HANDLE_ERROR(cudaStreamSynchronize(stream2));
     HANDLE_ERROR(cudaStreamSynchronize(stream3));
     HANDLE_ERROR(cudaStreamSynchronize(stream4));
+    printf("gpu sorted : %d \n", isRangeSorted_cpu(host_b, 0, pinned_size - 1));
+    printf("gpu sorted : %d \n", isRangeSorted_cpu(host_b, pinned_size, pinned_size * 2 - 1));
 
     double gpu_time = cuda_timer_stop(gpu_start, gpu_stop) / 1000.0;
 
