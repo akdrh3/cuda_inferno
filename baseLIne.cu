@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     // double cpu_time = cuda_timer_stop(start, stop) / 1000.0;
 
     double total_time = cuda_timer_stop(start, stop) / 1000.0;
-    printf("Total time: %lf, gpu sort: %lf, dtoh : %lf", total_time, gpu_time, dtoh_time);
+    printf("Total time: %lf, gpu sort: %lf, dtoh : %lf\n", total_time, gpu_time, dtoh_time);
 
     free(host_a);
     free(host_b);
