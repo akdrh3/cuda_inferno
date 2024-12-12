@@ -14,6 +14,7 @@ MERGESORT_OUTPUT = thrust_merge
 
 # Rules
 all: $(MERGESORT_OUTPUT)
+baseline: $(BASELINE OUTPUT)
 
 %.o: %.c $(DEPS)
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -23,6 +24,9 @@ all: $(MERGESORT_OUTPUT)
 
 thrust_merge: thrust_merge.o $(OBJS)
 	$(NVCC) -o thrust_merge thrust_merge.o util.o gpu_util.o -lcudart -lstdc++
+
+baseline: baseLIne.o $(OBJS)
+	$(NVCC) -o baseline baseLIne.o util.o gpu_util.o -lcudart
 
 clean:
 	rm -f *.o $(MERGESORT_OUTPUT)
