@@ -73,18 +73,10 @@ int main(int argc, char *argv[])
         memcpy(host_b + offset, writingBackPinnedMem, left_size * sizeof(int));
     }
     // HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size * sizeof(int), cudaMemcpyDeviceToHost));
-    print_array_host(host_b, pinned_size - 1);
-    printf("sorted : %d \n", isRangeSorted_cpu(host_b, 0, 9));
+    print_array_host(host_b, 10);
+    printf("sorted : %d \n", isRangeSorted_cpu(host_b, 0, pinned_size - 1));
 
     __gnu_parallel::sort(host_b, host_b + input_size);
-
-    // dev_ptr = thrust::device_pointer_cast(d_a);
-    // thrust::sort(thrust::cuda::par.on(stream1), dev_ptr, dev_ptr + pinned_size);
-    // cudaEventRecord(event, stream1);
-    // cudaStreamWaitEvent(stream3, event);
-    // HANDLE_ERROR(cudaMemcpyAsync(h_cPinned, d_a, pinned_size * sizeof(int), cudaMemcpyDeviceToHost, stream3));
-    // HANDLE_ERROR(cudaStreamSynchronize(stream3));
-    // memcpy(host_b, h_cPinned, pinned_size * sizeof(int));
 
     free(host_a);
     cudaFreeHost(h_aPinned);
