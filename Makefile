@@ -1,6 +1,7 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -c -std=c99 -Wall -Wextra -I -fopenmp
+CFLAGS = -c -std=c99 -Wall -Wextra -fopenmp
+
 NVCC = /usr/local/cuda/bin/nvcc
 NVCCFLAGS = -c -rdc=true -Xcompiler -fopenmp
 
@@ -13,23 +14,30 @@ OBJS = util.o gpu_util.o
 MERGESORT_OUTPUT = thrust_merge
 BASELINE_OUTPUT = baseline
 
+# CUDA Libraries
+CUDA_LIBS = -lcudart -lstdc++ -lgomp
+
 # Rules
-all: $(MERGESORT_OUTPUT)
-baseline: $(BASELINE OUTPUT)
+all: $(MERGESORT_OUTPUT) $(BASELINE_OUTPUT)
 
+# Rule for C files
 %.o: %.c $(DEPS)
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -o $@ $<
 
+# Rule for CUDA (.cu) files
 %.o: %.cu $(CUDEPS)
 	$(NVCC) $(NVCCFLAGS) -dc -o $@ $<
 
-thrust_merge: thrust_merge.o $(OBJS)
-	$(NVCC) -o thrust_merge thrust_merge.o util.o gpu_util.o -lcudart -lstdc++
+# Rule to create thrust_merge binary
+$(MERGESORT_OUTPUT): thrust_merge.o $(OBJS)
+	$(NVCC) -o $@ thrust_merge.o $(OBJS) $(CUDA_LIBS) -Xcompiler -fopenmp
 
-baseline: baseLIne.o $(OBJS)
-	$(NVCC) -o baseline baseLIne.o util.o gpu_util.o -lcudart
+# Rule to create baseline binary
+$(BASELINE_OUTPUT): baseline.o $(OBJS)
+	$(NVCC) -o $@ baseline.o $(OBJS) $(CUDA_LIBS) -Xcompiler -fopenmp
 
+# Clean rule to remove object files and binaries
 clean:
-	rm -f *.o $(MERGESORT_OUTPUT)
+	rm -f *.o $(MERGESORT_OUTPUT) $(BASELINE_OUTPUT)
 
-.PHONY: clean
+.PHONY: all clean
