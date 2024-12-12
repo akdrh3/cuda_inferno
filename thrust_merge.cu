@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
 
     double total_time = cuda_timer_stop(start, stop) / 1000.0;
     printf("Total time: %lf, gpu sort: %lf, cpu sort: %lf\n", total_time, gpu_time, cpu_time);
-
+    printf("sorted : %d \n", isRangeSorted_cpu(host_b, 0, input_size - 1));
     free(host_a);
     free(host_b);
     cudaFreeHost(h_aPinned);
