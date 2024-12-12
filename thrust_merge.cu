@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
     const char *file_name = argv[1];
     // uint64_t input_size = strtoull(argv[2], NULL, 10) * 1000000;
-    uint64_t input_size = 20;
+    uint64_t input_size = 10;
     int *host_a = (int *)malloc(sizeof(int) * input_size);
     int *host_b = (int *)malloc(sizeof(int) * input_size);
     if (host_a == NULL || host_b == NULL)
