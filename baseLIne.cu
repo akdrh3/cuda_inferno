@@ -35,8 +35,9 @@ int main(int argc, char *argv[])
     int *d_a;
     HANDLE_ERROR(cudaMalloc((void **)&d_a, sizeof(int) * input_size));
 
-    size_t batch_size = 5 * 1000000000;
+    uint16_t batch_size = 5 * 1000000000;
     size_t numChunks = (input_size + batch_size - 1) / batch_size;
+    thrust::device_ptr<int> dev_ptr;
 
     cudaEvent_t event, start, stop, gpu_start, gpu_stop, cpu_start, cpu_stop;
     cudaEventCreate(&event);
@@ -56,7 +57,7 @@ int main(int argc, char *argv[])
     double gpu_time = cuda_timer_stop(gpu_start, gpu_stop) / 1000.0;
     // HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size * sizeof(int), cudaMemcpyDeviceToHost));
     print_array_host(host_b, 10);
-    printf("sorted : %d \n", isRangeSorted_cpu(host_b, 0, pinned_size - 1));
+    printf("sorted : %d \n", isRangeSorted_cpu(host_b, 0, batch_size - 1));
 
     // cuda_timer_start(&cpu_start, &cpu_stop);
     // __gnu_parallel::sort(host_b, host_b + input_size);
