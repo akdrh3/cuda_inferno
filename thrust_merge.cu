@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     // }
 
     const char *file_name = argv[1];
-    uint64_t input_size = strtoull(argv[2], NULL, 10) * 10;
+    uint64_t input_size = strtoull(argv[2], NULL, 10) * 1000000;
     int *host_a = (int *)malloc(sizeof(int) * input_size);
     int *host_b = (int *)malloc(sizeof(int) * input_size);
     if (host_a == NULL || host_b == NULL)
@@ -72,6 +72,7 @@ int main(int argc, char *argv[])
         memcpy(host_b + offset, writingBackPinnedMem, left_size * sizeof(int));
     }
     // HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size * sizeof(int), cudaMemcpyDeviceToHost));
+    print_array_host(host_b, pinned_size - 1);
     printf("sorted : %d \n", isRangeSorted_cpu(host_b, 0, 9));
 
     // dev_ptr = thrust::device_pointer_cast(d_a);
