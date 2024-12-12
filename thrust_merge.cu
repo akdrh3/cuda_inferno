@@ -68,8 +68,8 @@ int main(int argc, char *argv[])
         int *writingBackPinnedMem = (i % 2 == 0) ? h_cPinned : h_dPinned;
 
         memcpy(currentPinnedMem, host_a + offset, left_size * sizeof(int));
-        printf("start index : %lu, end index : %lu, array:\n", offset, offset + left_size - 1);
-        print_array_host(host_a + offset,left_size);
+        //printf("start index : %lu, end index : %lu, array:\n", offset, offset + left_size - 1);
+        //print_array_host(host_a + offset,left_size);
 
         HANDLE_ERROR(cudaMemcpy(d_a + offset, currentPinnedMem, left_size * sizeof(int), cudaMemcpyHostToDevice));
         dev_ptr = thrust::device_pointer_cast(d_a + offset);
@@ -79,9 +79,9 @@ int main(int argc, char *argv[])
         HANDLE_ERROR(cudaMemcpyAsync(writingBackPinnedMem, d_a + offset, left_size * sizeof(int), cudaMemcpyDeviceToHost, dtohStream));
         HANDLE_ERROR(cudaStreamSynchronize(dtohStream));
         memcpy(host_b + offset, writingBackPinnedMem, left_size * sizeof(int));
-        printf("start index : %lu, end index : %lu, gpu sorted:", offset, offset + left_size - 1);
-        print_array_host(host_b + offset, left_size);
-        printf("sorted : %d \n", isRangeSorted_cpu(host_b, offset, offset + left_size));
+        //printf("start index : %lu, end index : %lu, gpu sorted:", offset, offset + left_size - 1);
+        //print_array_host(host_b + offset, left_size);
+        //printf("sorted : %d \n", isRangeSorted_cpu(host_b, offset, offset + left_size));
 
         // printf("gpu sorted : %d \n", isRangeSorted_cpu(host_b, offset, offset + left_size - 1));
     }
