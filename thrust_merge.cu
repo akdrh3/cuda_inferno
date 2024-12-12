@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
     const char *file_name = argv[1];
     // uint64_t input_size = strtoull(argv[2], NULL, 10) * 1000000;
-    uint64_t input_size = 63;
+    uint64_t input_size = 20;
     int *host_a = (int *)malloc(sizeof(int) * input_size);
     int *host_b = (int *)malloc(sizeof(int) * input_size);
     if (host_a == NULL || host_b == NULL)
@@ -64,16 +64,13 @@ int main(int argc, char *argv[])
         print_array_host(currentPinnedMem, left_size);
         printf("done memcpy\n\n");
         HANDLE_ERROR(cudaMemcpy(d_a + offset, currentPinnedMem, left_size * sizeof(int), cudaMemcpyHostToDevice));
-        printf("Device Variable Copying:\t%s\n", cudaGetErrorString(cudaGetLastError()));
-        // dev_ptr = thrust::device_pointer_cast(d_a + offset);
-        // thrust::sort(thrust::cuda::par.on(currentStream), dev_ptr, dev_ptr + left_size);
+        dev_ptr = thrust::device_pointer_cast(d_a + offset);
+        thrust::sort(thrust::cuda::par.on(currentStream), dev_ptr, dev_ptr + left_size);
     }
     // HANDLE_ERROR(cudaDeviceSynchronize());
     // HANDLE_ERROR(cudaStreamSynchronize(stream1));
     // HANDLE_ERROR(cudaStreamSynchronize(stream2));
     HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size, cudaMemcpyDeviceToHost));
-
-    printf("Device Variable Copying:\t%s\n", cudaGetErrorString(cudaGetLastError()));
     HANDLE_ERROR(cudaDeviceSynchronize());
     print_array_host(host_b, input_size);
 
