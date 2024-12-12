@@ -76,15 +76,8 @@ int main(int argc, char *argv[])
         HANDLE_ERROR(cudaMemcpyAsync(writingBackPinnedMem, d_a + offset, left_size * sizeof(int), cudaMemcpyDeviceToHost, dtohStream));
         HANDLE_ERROR(cudaStreamSynchronize(dtohStream));
         memcpy(host_b + offset, writingBackPinnedMem, left_size * sizeof(int));
+        printf("gpu sorted : %d \n", isRangeSorted_cpu(host_b, host_b + offset, host_b + offest + left_size - 1));
     }
-
-    HANDLE_ERROR(cudaStreamSynchronize(stream1));
-    HANDLE_ERROR(cudaStreamSynchronize(stream2));
-    HANDLE_ERROR(cudaStreamSynchronize(stream3));
-    HANDLE_ERROR(cudaStreamSynchronize(stream4));
-    printf("gpu sorted : %d \n", isRangeSorted_cpu(host_b, 0, pinned_size - 1));
-    printf("gpu sorted : %d \n", isRangeSorted_cpu(host_b, pinned_size, pinned_size * 2 - 1));
-
     double gpu_time = cuda_timer_stop(gpu_start, gpu_stop) / 1000.0;
 
     cuda_timer_start(&cpu_start, &cpu_stop);
