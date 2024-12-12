@@ -17,7 +17,7 @@ numbers=(500 1000 2000 3000 4000 5000)
 # Loop through numbers and threads
 for number in "${numbers[@]}"
 do
-    output=$(./thrust_merge 16000numbers.txt ${number} 2>> thrust_merge_error_log.txt)
+    output=$(./baseline 16000numbers.txt ${number} 2>> thrust_merge_error_log.txt)
     
     # Check if ./mergesort succeeded
     if [[ $? -ne 0 ]]; then
