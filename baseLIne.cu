@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     HANDLE_ERROR(cudaMalloc((void **)&d_a, sizeof(int) * input_size));
 
     uint64_t batch_size = 5 * 1000000000;
-    size_t numChunks = (input_size + batch_size - 1) / batch_size;
+    uint64_t numChunks = (input_size + batch_size - 1) / batch_size;
     thrust::device_ptr<int> dev_ptr;
 
     cudaEvent_t event, start, stop, gpu_start, gpu_stop, dtoh_start, dtoh_stop;
@@ -44,10 +44,10 @@ int main(int argc, char *argv[])
 
     cuda_timer_start(&start, &stop);
     cuda_timer_start(&gpu_start, &gpu_stop);
-    for (int i = 0; i < numChunks; i++)
+    for (uint64_t i = 0; i < numChunks; i++)
     {
-        size_t left_size = (i < numChunks - 1) ? batch_size : (input_size % batch_size);
-        size_t offset = i * batch_size;
+        uint64_t left_size = (i < numChunks - 1) ? batch_size : (input_size % batch_size);
+        uint64_t offset = i * batch_size;
 
         HANDLE_ERROR(cudaMemcpy(d_a + offset, host_a + offset, left_size * sizeof(int), cudaMemcpyHostToDevice));
         dev_ptr = thrust::device_pointer_cast(d_a + offset);
