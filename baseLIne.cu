@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     size_t numChunks = (input_size + batch_size - 1) / batch_size;
     thrust::device_ptr<int> dev_ptr;
 
-    cudaEvent_t event, start, stop, gpu_start, gpu_stop, cpu_start, cpu_stop;
+    cudaEvent_t event, start, stop, gpu_start, gpu_stop, dtoh_start, dtoh_stop;
     cudaEventCreate(&event);
 
     cuda_timer_start(&start, &stop);
@@ -53,8 +53,10 @@ int main(int argc, char *argv[])
         dev_ptr = thrust::device_pointer_cast(d_a + offset);
         thrust::sort(dev_ptr, dev_ptr + left_size);
     }
-    HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size * sizeof(int), cudaMemcpyDeviceToHost));
     double gpu_time = cuda_timer_stop(gpu_start, gpu_stop) / 1000.0;
+    cuda_timer_start(&dtoh_start, &dtoh_stop);
+    HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size * sizeof(int), cudaMemcpyDeviceToHost));
+    double dtoh_time = cuda_timer_stop(dtoh_start, dtoh_stop) / 1000.0;
     // HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size * sizeof(int), cudaMemcpyDeviceToHost));
     print_array_host(host_b, 10);
     printf("sorted : %d \n", isRangeSorted_cpu(host_b, 0, batch_size - 1));
@@ -64,7 +66,7 @@ int main(int argc, char *argv[])
     // double cpu_time = cuda_timer_stop(start, stop) / 1000.0;
 
     double total_time = cuda_timer_stop(start, stop) / 1000.0;
-    printf("Total time: %lf, gpu sort: %lf", total_time, gpu_time);
+    printf("Total time: %lf, gpu sort: %lf, dtoh : %lf", total_time, gpu_time, dtoh_time);
 
     free(host_a);
     free(host_b);
