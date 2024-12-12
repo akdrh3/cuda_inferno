@@ -72,6 +72,8 @@ int main(int argc, char *argv[])
     // HANDLE_ERROR(cudaStreamSynchronize(stream1));
     // HANDLE_ERROR(cudaStreamSynchronize(stream2));
     HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size, cudaMemcpyDeviceToHost));
+
+    printf("Device Variable Copying:\t%s\n", cudaGetErrorString(cudaGetLastError()));
     HANDLE_ERROR(cudaDeviceSynchronize());
     print_array_host(host_b, input_size);
 
