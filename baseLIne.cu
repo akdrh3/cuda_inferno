@@ -16,11 +16,11 @@ extern "C"
 
 int main(int argc, char *argv[])
 {
-    // if (argc < 3)
-    // {
-    //     printf("Usage: %s <filename> <arraysize in millions>\n", argv[0]);
-    //     return -1;
-    // }
+    if (argc < 3)
+    {
+        printf("Usage: %s <filename> <arraysize in millions>\n", argv[0]);
+        return -1;
+    }
 
     const char *file_name = argv[1];
     uint64_t input_size = strtoull(argv[2], NULL, 10) * 1000000;
@@ -32,25 +32,12 @@ int main(int argc, char *argv[])
         return -1;
     }
     read_from_file_cpu(file_name, host_a, input_size);
-
-    size_t pinned_size = 1000000; // Limited by pinned memory size
-    size_t numChunks = (input_size + pinned_size - 1) / pinned_size;
-
-    int *h_aPinned, *h_bPinned, *h_cPinned, *h_dPinned;
-    HANDLE_ERROR(cudaMallocHost((void **)&h_aPinned, sizeof(int) * pinned_size));
-    HANDLE_ERROR(cudaMallocHost((void **)&h_bPinned, sizeof(int) * pinned_size));
-    HANDLE_ERROR(cudaMallocHost((void **)&h_cPinned, sizeof(int) * pinned_size));
-    HANDLE_ERROR(cudaMallocHost((void **)&h_dPinned, sizeof(int) * pinned_size));
-
     int *d_a;
     HANDLE_ERROR(cudaMalloc((void **)&d_a, sizeof(int) * input_size));
 
-    cudaStream_t stream1, stream2, stream3, stream4;
-    HANDLE_ERROR(cudaStreamCreate(&stream1));
-    HANDLE_ERROR(cudaStreamCreate(&stream2));
-    HANDLE_ERROR(cudaStreamCreate(&stream3));
-    HANDLE_ERROR(cudaStreamCreate(&stream4));
-    thrust::device_ptr<int> dev_ptr;
+    size_t batch_size = 5 * 1000000000;
+    size_t numChunks = (input_size + batch_size - 1) / batch_size;
+
     cudaEvent_t event, start, stop, gpu_start, gpu_stop, cpu_start, cpu_stop;
     cudaEventCreate(&event);
 
@@ -58,45 +45,28 @@ int main(int argc, char *argv[])
     cuda_timer_start(&gpu_start, &gpu_stop);
     for (int i = 0; i < numChunks; i++)
     {
-        size_t left_size = (i < numChunks - 1) ? pinned_size : (input_size % pinned_size) + pinned_size;
-        cudaStream_t currentStream = (i % 2 == 0) ? stream1 : stream2;
-        cudaStream_t dtohStream = (i % 2 == 0) ? stream3 : stream4;
-        int *currentPinnedMem = (i % 2 == 0) ? h_aPinned : h_bPinned;
-        int *writingBackPinnedMem = (i % 2 == 0) ? h_cPinned : h_dPinned;
-        size_t offset = i * pinned_size;
+        size_t left_size = (i < numChunks - 1) ? batch_size : (input_size % batch_size);
+        size_t offset = i * batch_size;
 
-        memcpy(currentPinnedMem, host_a + offset, left_size * sizeof(int));
-        HANDLE_ERROR(cudaMemcpy(d_a + offset, currentPinnedMem, left_size * sizeof(int), cudaMemcpyHostToDevice));
+        HANDLE_ERROR(cudaMemcpy(d_a + offset, host_a + offset, left_size * sizeof(int), cudaMemcpyHostToDevice));
         dev_ptr = thrust::device_pointer_cast(d_a + offset);
-        thrust::sort(thrust::cuda::par.on(currentStream), dev_ptr, dev_ptr + left_size);
-        cudaEventRecord(event, currentStream);
-        cudaStreamWaitEvent(dtohStream, event);
-        HANDLE_ERROR(cudaMemcpyAsync(writingBackPinnedMem, d_a + offset, left_size * sizeof(int), cudaMemcpyDeviceToHost, dtohStream));
-        HANDLE_ERROR(cudaStreamSynchronize(dtohStream));
-        memcpy(host_b + offset, writingBackPinnedMem, left_size * sizeof(int));
+        thrust::sort(dev_ptr, dev_ptr + left_size);
     }
+    HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size * sizeof(int), cudaMemcpyDeviceToHost));
     double gpu_time = cuda_timer_stop(gpu_start, gpu_stop) / 1000.0;
     // HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size * sizeof(int), cudaMemcpyDeviceToHost));
     print_array_host(host_b, 10);
     printf("sorted : %d \n", isRangeSorted_cpu(host_b, 0, pinned_size - 1));
 
-    cuda_timer_start(&cpu_start, &cpu_stop);
-    __gnu_parallel::sort(host_b, host_b + input_size);
-    double cpu_time = cuda_timer_stop(start, stop) / 1000.0;
+    // cuda_timer_start(&cpu_start, &cpu_stop);
+    // __gnu_parallel::sort(host_b, host_b + input_size);
+    // double cpu_time = cuda_timer_stop(start, stop) / 1000.0;
 
     double total_time = cuda_timer_stop(start, stop) / 1000.0;
-    printf("Total time: %lf, gpu sort: %lf, cpu sort: %lf\n", total_time, gpu_time, cpu_time);
+    printf("Total time: %lf, gpu sort: %lf", total_time, gpu_time);
 
     free(host_a);
     free(host_b);
-    cudaFreeHost(h_aPinned);
-    cudaFreeHost(h_bPinned);
-    cudaFreeHost(h_cPinned);
-    cudaFreeHost(h_dPinned);
-    cudaStreamDestroy(stream1);
-    cudaStreamDestroy(stream2);
-    cudaStreamDestroy(stream3);
-    cudaStreamDestroy(stream4);
     cudaFree(d_a);
 
     return 0;
