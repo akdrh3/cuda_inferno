@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     int *d_a;
     HANDLE_ERROR(cudaMalloc((void **)&d_a, sizeof(int) * input_size));
 
-    uint16_t batch_size = 5 * 1000000000;
+    uint64_t batch_size = 5 * 1000000000;
     size_t numChunks = (input_size + batch_size - 1) / batch_size;
     thrust::device_ptr<int> dev_ptr;
 
