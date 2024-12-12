@@ -11,6 +11,7 @@ extern "C"
 #include <stdio.h>
 
 #include <parallel/algorithm>
+#include <algorithm>
 
 int main(int argc, char *argv[])
 {
