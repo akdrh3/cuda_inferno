@@ -51,28 +51,26 @@ int main(int argc, char *argv[])
     cudaEvent_t event;
     cudaEventCreate(&event);
     print_array_host(host_a, input_size);
-    HANDLE_ERROR(cudaMemcpy(d_a, host_a, input_size * sizeof(int), cudaMemcpyHostToDevice));
 
-    // for (int i = 0; i < numChunks; i++)
-    // {
-    //     size_t left_size = (i <= numChunks - 1) ? pinned_size : (input_size % pinned_size);
-    //     cudaStream_t currentStream = (i % 2 == 0) ? stream1 : stream2;
-    //     int *currentPinnedMem = (i % 2 == 0) ? h_aPinned : h_bPinned;
-    //     size_t offset = i * pinned_size;
-    //     printf("numChunks = %zu, i = %d, leftsize = %zu, offset = %zu\n", numChunks, i, left_size, offset);
+    for (int i = 0; i < numChunks; i++)
+    {
+        size_t left_size = (i <= numChunks - 1) ? pinned_size : (input_size % pinned_size);
+        cudaStream_t currentStream = (i % 2 == 0) ? stream1 : stream2;
+        int *currentPinnedMem = (i % 2 == 0) ? h_aPinned : h_bPinned;
+        size_t offset = i * pinned_size;
+        printf("numChunks = %zu, i = %d, leftsize = %zu, offset = %zu\n", numChunks, i, left_size, offset);
 
-    //     memcpy(currentPinnedMem, host_a + offset, left_size * sizeof(int));
-    //     print_array_host(currentPinnedMem, left_size);
-    //     printf("done memcpy\n\n");
-    //     HANDLE_ERROR(cudaMemcpy(d_a + offset, currentPinnedMem, left_size * sizeof(int), cudaMemcpyHostToDevice));
-    //     dev_ptr = thrust::device_pointer_cast(d_a + offset);
-    //     thrust::sort(thrust::cuda::par.on(currentStream), dev_ptr, dev_ptr + left_size);
-    // }
+        memcpy(currentPinnedMem, host_a + offset, left_size * sizeof(int));
+        print_array_host(currentPinnedMem, left_size);
+        printf("done memcpy\n\n");
+        HANDLE_ERROR(cudaMemcpy(d_a + offset, currentPinnedMem, left_size * sizeof(int), cudaMemcpyHostToDevice));
+        dev_ptr = thrust::device_pointer_cast(d_a + offset);
+        thrust::sort(thrust::cuda::par.on(currentStream), dev_ptr, dev_ptr + left_size);
+    }
     // HANDLE_ERROR(cudaDeviceSynchronize());
     // HANDLE_ERROR(cudaStreamSynchronize(stream1));
     // HANDLE_ERROR(cudaStreamSynchronize(stream2));
-    HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size, cudaMemcpyDeviceToHost));
-    HANDLE_ERROR(cudaDeviceSynchronize());
+    HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size * sizeof(int), cudaMemcpyDeviceToHost));
     print_array_host(host_b, input_size);
 
     // dev_ptr = thrust::device_pointer_cast(d_a);
