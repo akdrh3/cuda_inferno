@@ -2,7 +2,7 @@
 CC = gcc
 CFLAGS = -c -std=c99 -Wall -Wextra -I -fopenmp
 NVCC = /usr/local/cuda/bin/nvcc
-NVCCFLAGS = -c -rdc=true -Xcompiler -fopenmp -fgomp
+NVCCFLAGS = -c -rdc=true -Xcompiler -fopenmp
 
 # Files
 DEPS = util.h
