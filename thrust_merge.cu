@@ -56,7 +56,9 @@ int main(int argc, char *argv[])
     {
         size_t left_size = (i < numChunks - 1) ? pinned_size : (input_size % pinned_size);
         cudaStream_t currentStream = (i % 2 == 0) ? stream1 : stream2;
+        cudaStream_t dtohStream = (i % 2 == 0) ? stream3 : stream4;
         int *currentPinnedMem = (i % 2 == 0) ? h_aPinned : h_bPinned;
+        int *writingBackPinnedMem = (i % 2 == 0) ? h_cPinned : h_dPinned;
         size_t offset = i * pinned_size;
         printf("numChunks = %zu, i = %d, leftsize = %zu, offset = %zu\n", numChunks, i, left_size, offset);
 
@@ -66,8 +68,13 @@ int main(int argc, char *argv[])
         HANDLE_ERROR(cudaMemcpy(d_a + offset, currentPinnedMem, left_size * sizeof(int), cudaMemcpyHostToDevice));
         dev_ptr = thrust::device_pointer_cast(d_a + offset);
         thrust::sort(thrust::cuda::par.on(currentStream), dev_ptr, dev_ptr + left_size);
+        cudaEventRecord(event, currentStream);
+        cudaStreamWaitEvent(dtohStream, event);
+        HANDLE_ERROR(cudaMemcpyAsync(writingBackPinnedMem, d_a + offset, left_size * sizeof(int), cudaMemcpyDeviceToHost, dtohStream));
+        HANDLE_ERROR(cudaStreamSynchronize(dtohStream));
+        memcpy(host_b + offset, writingBackPinnedMem, left_size * sizeof(int));
     }
-    HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size * sizeof(int), cudaMemcpyDeviceToHost));
+    // HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size * sizeof(int), cudaMemcpyDeviceToHost));
     print_array_host(host_b, input_size);
     printf("sorted : %d \n", isRangeSorted_cpu(host_b, 0, 9));
 
