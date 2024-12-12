@@ -18,7 +18,8 @@ BASELINE_OUTPUT = baseline
 CUDA_LIBS = -lcudart -lstdc++ -lgomp
 
 # Rules
-all: $(MERGESORT_OUTPUT) $(BASELINE_OUTPUT)
+all: $(MERGESORT_OUTPUT)
+baseline: $(BASELINE OUTPUT)
 
 # Rule for C files
 %.o: %.c $(DEPS)
