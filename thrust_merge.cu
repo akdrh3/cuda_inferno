@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < numChunks; i++)
     {
-        size_t left_size = (i < numChunks - 1) ? pinned_size : (input_size % pinned_size);
+        size_t left_size = (i < numChunks - 1) ? pinned_size : (input_size % pinned_size) + pinned_size;
         cudaStream_t currentStream = (i % 2 == 0) ? stream1 : stream2;
         cudaStream_t dtohStream = (i % 2 == 0) ? stream3 : stream4;
         int *currentPinnedMem = (i % 2 == 0) ? h_aPinned : h_bPinned;
