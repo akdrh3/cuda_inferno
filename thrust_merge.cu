@@ -10,6 +10,8 @@ extern "C"
 #include <climits>
 #include <stdio.h>
 
+#include <parallel/algorithm>
+
 int main(int argc, char *argv[])
 {
     // if (argc < 3)
@@ -29,7 +31,7 @@ int main(int argc, char *argv[])
     }
     read_from_file_cpu(file_name, host_a, input_size);
 
-    size_t pinned_size = 10; // Limited by pinned memory size
+    size_t pinned_size = 1000000; // Limited by pinned memory size
     size_t numChunks = (input_size + pinned_size - 1) / pinned_size;
 
     int *h_aPinned, *h_bPinned, *h_cPinned, *h_dPinned;
@@ -49,7 +51,6 @@ int main(int argc, char *argv[])
     thrust::device_ptr<int> dev_ptr;
     cudaEvent_t event;
     cudaEventCreate(&event);
-    print_array_host(host_a, input_size);
 
     for (int i = 0; i < numChunks; i++)
     {
@@ -59,11 +60,8 @@ int main(int argc, char *argv[])
         int *currentPinnedMem = (i % 2 == 0) ? h_aPinned : h_bPinned;
         int *writingBackPinnedMem = (i % 2 == 0) ? h_cPinned : h_dPinned;
         size_t offset = i * pinned_size;
-        printf("numChunks = %zu, i = %d, leftsize = %zu, offset = %zu\n", numChunks, i, left_size, offset);
 
         memcpy(currentPinnedMem, host_a + offset, left_size * sizeof(int));
-        print_array_host(currentPinnedMem, left_size);
-        printf("done memcpy\n\n");
         HANDLE_ERROR(cudaMemcpy(d_a + offset, currentPinnedMem, left_size * sizeof(int), cudaMemcpyHostToDevice));
         dev_ptr = thrust::device_pointer_cast(d_a + offset);
         thrust::sort(thrust::cuda::par.on(currentStream), dev_ptr, dev_ptr + left_size);
@@ -74,7 +72,6 @@ int main(int argc, char *argv[])
         memcpy(host_b + offset, writingBackPinnedMem, left_size * sizeof(int));
     }
     // HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size * sizeof(int), cudaMemcpyDeviceToHost));
-    print_array_host(host_b, input_size);
     printf("sorted : %d \n", isRangeSorted_cpu(host_b, 0, 9));
 
     // dev_ptr = thrust::device_pointer_cast(d_a);
