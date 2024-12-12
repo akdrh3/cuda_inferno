@@ -67,11 +67,9 @@ int main(int argc, char *argv[])
         dev_ptr = thrust::device_pointer_cast(d_a + offset);
         thrust::sort(thrust::cuda::par.on(currentStream), dev_ptr, dev_ptr + left_size);
     }
-    // HANDLE_ERROR(cudaDeviceSynchronize());
-    // HANDLE_ERROR(cudaStreamSynchronize(stream1));
-    // HANDLE_ERROR(cudaStreamSynchronize(stream2));
     HANDLE_ERROR(cudaMemcpy(host_b, d_a, input_size * sizeof(int), cudaMemcpyDeviceToHost));
     print_array_host(host_b, input_size);
+    isRangeSorted_cpu(host_b, 0, 9);
 
     // dev_ptr = thrust::device_pointer_cast(d_a);
     // thrust::sort(thrust::cuda::par.on(stream1), dev_ptr, dev_ptr + pinned_size);
