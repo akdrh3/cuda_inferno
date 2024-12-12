@@ -84,9 +84,9 @@ int main(int argc, char *argv[])
 
     for (uint64_t i = 0; i < numChunks - 1; i++)
     {
-        uint64_t left_size = std::min(batch_size, input_size - current_offset);
+        uint64_t left_size = std::min(pinned_size, input_size - current_offset);
         uint64_t next_offset = current_offset + left_size;
-        uint64_t next_size = std::min(batch_size, input_size - next_offset);
+        uint64_t next_size = std::min(pinned_size, input_size - next_offset);
 
         std::merge(host_b + current_offset,
                    host_b + current_offset + left_size,
