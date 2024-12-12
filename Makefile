@@ -22,7 +22,7 @@ all: $(MERGESORT_OUTPUT)
 	$(NVCC) $(NVCCFLAGS) -dc -o $@ $<
 
 thrust_merge: thrust_merge.o $(OBJS)
-	$(NVCC) -o thrust_merge thrust_merge.o util.o gpu_util.o -lcudart -lstdc++ -fopenmp
+	$(NVCC) -o thrust_merge thrust_merge.o util.o gpu_util.o -lcudart -lstdc++
 
 clean:
 	rm -f *.o $(MERGESORT_OUTPUT)
