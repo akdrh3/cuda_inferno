@@ -17,10 +17,10 @@ file_name = f"numbers_{data_size}.txt"
 parse = math.ceil(data_size/10)
 with open(file_name, "w") as f:
     for i in range(0,data_size):
-        num = r.randint(0,2147483647)
-        f.write("%d\n"%num)
+        random_float = r.random(0,1)
+        f.write("%", random_float)
         if(i%parse == 0):
-            print(f"just generated {i}th element: {num}")
+            print(f"just generated {i}th element: {random_float}")
 
 end_time = time.time()
 elapsed_time = end_time - start_time
