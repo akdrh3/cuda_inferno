@@ -18,7 +18,7 @@ parse = math.ceil(data_size/10)
 with open(file_name, "w") as f:
     for i in range(0,data_size):
         random_float = r.random()
-        f.write("%", random_float)
+        f.write(f"{random_float}\n")
         if(i%parse == 0):
             print(f"just generated {i}th element: {random_float}")
 
