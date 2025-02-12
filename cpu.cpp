@@ -10,7 +10,7 @@
 struct PerformanceData
 {
     double dataSizeGB;
-    size_t numElements;
+    uint64_t numElements;
     int threads;
     long long durationSeconds;
     long long dataTransferTime;
@@ -21,7 +21,7 @@ void writeToCSV(const std::string &filename, const PerformanceData &perfData);
 std::vector<double> readDoublesFromFile(const std::string &filename, uint64_t numElements);
 bool isSorted(const std::vector<double> &data)
 {
-    for (size_t i = 0; i < data.size() - 1; ++i)
+    for (uint64_t i = 0; i < data.size() - 1; ++i)
     {
         if (data[i] > data[i + 1])
         {
@@ -33,9 +33,9 @@ bool isSorted(const std::vector<double> &data)
 
 double dataSizeInGB(const std::vector<double> &data)
 {
-    size_t elementSize = sizeof(double);
-    size_t capacity = data.capacity();
-    size_t totalBytes = capacity * elementSize;
+    uint64_t elementSize = sizeof(double);
+    uint64_t capacity = data.capacity();
+    uint64_t totalBytes = capacity * elementSize;
     return static_cast<double>(totalBytes) / (1024 * 1024 * 1024);
 }
 
