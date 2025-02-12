@@ -7,7 +7,17 @@
 #include <omp.h>
 #include <chrono> // for omp_set_num_threads
 
-void writeToCSV(const std::string &filename, size_t dataSize, size_t numElements, int threads, long long duration, long long dataTransfertime, bool isSorted);
+struct PerformanceData
+{
+    double dataSizeGB;
+    size_t numElements;
+    int threads;
+    long long durationSeconds;
+    long long dataTransferTime;
+    bool isSorted;
+};
+
+void writeToCSV(const std::string &filename, const PerformanceData &perfData);
 std::vector<double> readDoublesFromFile(const std::string &filename, size_t numElements);
 bool isSorted(const std::vector<double> &data)
 {
@@ -69,24 +79,40 @@ int main(int argc, char *argv[])
     // bool sortedStatus = isSorted(data);
     bool sortedStatus = true;
 
+    PerformanceData perfData{
+        dataSizeInGB(data),
+        numElements,
+        threads,
+        durationSeconds,
+        dataTransferTime,
+        sortedStatus};
+
     std::cout << "dataSize : " << dataGB << " sorting Time: " << durationSeconds << "s sorted: " << (sortedStatus ? "Yes" : "No") << std::endl;
 
-    writeToCSV("performance_metrics.csv", dataGB, numElements, threads, durationSeconds, dataTransfertime, sortedStatus);
+    writeToCSV("performance_metrics.csv", perfData);
     return 0;
 }
 
-void writeToCSV(const std::string &filename, size_t dataSize, size_t numElements, int threads, long long duration, long long dataTransfertime, bool isSorted)
+void writeToCSV(const std::string &filename, const PerformanceData &perfData)
 {
     std::ofstream file(filename, std::ios::app);
 
     std::ifstream testFile(filename);
     bool isEmpty = testFile.peek() == std::ifstream::traits_type::eof();
+
     // If file is empty, write the header
     if (isEmpty)
     {
-        file << "Data Size (GB),Total Elements,Threads,Duration (s), dataTransfer Time (s),Sorted\n";
+        file << "Data Size (GB),Total Elements,Threads, Sorting Duration (s),Data Transfer Time (s), Total Time (s), Sorted\n";
     }
-    file << dataSize << "," << numElements << "," << threads << "," << duration << "," << dataTransfertime << "," << (isSorted ? "Yes" : "No") << "\n";
+
+    file << perfData.dataSizeGB << ","
+         << perfData.numElements << ","
+         << perfData.threads << ","
+         << perfData.durationSeconds << ","
+         << perfData.dataTransferTime << ","
+         << perfData.durationSeconds + perfData.dataTransferTime << ","
+         << (perfData.isSorted ? "Yes" : "No") << "\n";
 
     file.close();
 }
