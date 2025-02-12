@@ -2,7 +2,9 @@
 #include <fstream>
 #include <vector>
 #include <string>
-#include <cstdlib> // For std::atoi
+#include <cstdlib>            // For std::atoi
+#include <parallel/algorithm> // for __gnu_parallel::sort
+#include <omp.h>              // for omp_set_num_threads
 
 std::vector<double> readDoublesFromFile(const std::string &filename, size_t numElements);
 bool isSorted(const std::vector<double> &data)
