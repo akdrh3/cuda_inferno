@@ -18,7 +18,7 @@ struct PerformanceData
 };
 
 void writeToCSV(const std::string &filename, const PerformanceData &perfData);
-std::vector<double> readDoublesFromFile(const std::string &filename, size_t numElements);
+std::vector<double> readDoublesFromFile(const std::string &filename, uint64_t numElements);
 bool isSorted(const std::vector<double> &data)
 {
     for (size_t i = 0; i < data.size() - 1; ++i)
@@ -60,8 +60,8 @@ int main(int argc, char *argv[])
         return 1; // Exit if not enough arguments
     }
 
-    std::string filename = argv[1];                    // First argument is the filename
-    size_t numElements = std::atoi(argv[2]) * 1000000; // Second argument is the number of elements to read
+    std::string filename = argv[1];                      // First argument is the filename
+    uint64_t numElements = std::atoi(argv[2]) * 1000000; // Second argument is the number of elements to read
     timerStart();
     std::vector<double> data = readDoublesFromFile(filename, numElements);
     long long dataTransfertime = timerStop();
@@ -117,7 +117,7 @@ void writeToCSV(const std::string &filename, const PerformanceData &perfData)
     file.close();
 }
 
-std::vector<double> readDoublesFromFile(const std::string &filename, size_t numElements)
+std::vector<double> readDoublesFromFile(const std::string &filename, uint64_t numElements)
 {
     std::ifstream file(filename);
     std::vector<double> data;
@@ -129,7 +129,7 @@ std::vector<double> readDoublesFromFile(const std::string &filename, size_t numE
     }
 
     double value;
-    size_t count = 0;
+    uint64_t count = 0;
     while (file >> value && count < numElements)
     {
         data.push_back(value);
