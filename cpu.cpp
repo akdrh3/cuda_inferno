@@ -66,7 +66,7 @@ void writeToCSV(const std::string &filename, size_t dataSize, size_t numElements
 {
     std::ofstream file(filename);
 
-    file << "dataSize, Total Elements,Threads,Duration(s),Sorted\n";
+    file << "Data Size (GB),Total Elements,Threads,Duration (seconds),Sorted\n";
 
     file << dataSize << "," << numElements << "," << threads << "," << duration << "," << (isSorted ? "Yes" : "No") << "\n";
 
