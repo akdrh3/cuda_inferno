@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
         dataTransfertime,
         sortedStatus};
 
-    std::cout << "dataSize : " << dataGB << " sorting Time: " << durationSeconds << "s sorted: " << (sortedStatus ? "Yes" : "No") << std::endl;
+    // std::cout << "dataSize : " << dataGB << " sorting Time: " << durationSeconds << "s sorted: " << (sortedStatus ? "Yes" : "No") << std::endl;
 
     writeToCSV("performance_metrics.csv", perfData);
     return 0;
