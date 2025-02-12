@@ -21,12 +21,12 @@ bool isSorted(const std::vector<double> &data)
     return true;
 }
 
-double dataSize(const std::vector<double> &data)
+double dataSizeInGB(const std::vector<double> &data)
 {
     size_t elementSize = sizeof(double);
     size_t capacity = data.capacity();
-    size_t totalMemory = capacity * elementSize;
-    return static_cast<double>(totalBytes) / (1024 * 1024 * 1024)
+    size_t totalBytes = capacity * elementSize;
+    return static_cast<double>(totalBytes) / (1024 * 1024 * 1024);
 }
 
 int main(int argc, char *argv[])
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
     double dataGB = dataSizeInGB(data);
-    std::cout << "dataSize : " << dataGB << " sorting Time: " << duration << "s sorted: " << (sortedStatus ? "Yes" : "No") << std::endl;
+    std::cout << "dataSize : " << dataGB << " sorting Time: " << duration.count() << "s sorted: " << (sortedStatus ? "Yes" : "No") << std::endl;
 
     writeToCSV("performance_metrics.csv", dataGB, numElements, threads, duration, sortedStatus);
     return 0;
