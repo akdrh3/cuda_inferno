@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     __gnu_parallel::sort(data.begin(), data.end());
 
     auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start).count;
     double dataGB = dataSizeInGB(data);
     bool sortedStatus = isSorted(data);
 
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void writeToCSV(const std::string &filename, size_t dataSize, size_t numElements, int threads, long long duration, bool isSorted);
+void writeToCSV(const std::string &filename, size_t dataSize, size_t numElements, int threads, long long duration, bool isSorted)
 {
     std::ofstream file(filename);
 
