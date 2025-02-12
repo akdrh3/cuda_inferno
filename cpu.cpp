@@ -53,6 +53,8 @@ int main(int argc, char *argv[])
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
     double dataGB = dataSizeInGB(data);
+    bool sortedStatus = isSorted(data);
+
     std::cout << "dataSize : " << dataGB << " sorting Time: " << duration.count() << "s sorted: " << (sortedStatus ? "Yes" : "No") << std::endl;
 
     writeToCSV("performance_metrics.csv", dataGB, numElements, threads, duration, sortedStatus);
