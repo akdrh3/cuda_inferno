@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     cuda_timer_start(&data_trans_start, &data_trans_stop);
     readFileToUnifiedMemory(file_name, unSorted, input_size);
     double data_trans_time = cuda_timer_stop(data_trans_start, data_trans_stop) / 1000.0;
-    print_array_device(unSorted, 5);
+    // print_array_device(unSorted, 5);
 
     SORTINGINFO.dataSizeGB = (input_size * sizeof(double)) / (double)(1024 * 1024 * 1024);
     SORTINGINFO.numElements = input_size;
