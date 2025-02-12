@@ -26,7 +26,14 @@ struct SortingInfo
 } SORTINGINFO;
 
 void readFileToUnifiedMemory(const char *filename, double *data, uint64_t numElements);
-
+__device__ void print_array_device(double *array, int64_t array_size)
+{
+    for (int64_t i = 0; i < array_size; ++i)
+    {
+        printf("%d ", array[i]);
+    }
+    printf("\n");
+}
 // filename size workload
 int main(int argc, char *argv[])
 {
