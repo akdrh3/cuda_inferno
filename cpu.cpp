@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
         numElements,
         threads,
         durationSeconds,
-        dataTransferTime,
+        dataTransfertime,
         sortedStatus};
 
     std::cout << "dataSize : " << dataGB << " sorting Time: " << durationSeconds << "s sorted: " << (sortedStatus ? "Yes" : "No") << std::endl;
