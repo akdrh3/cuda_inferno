@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     std::cout << "data is " << (isSorted(data) ? "sorted." : "not sorted.") << std::endl;
 
     // Set the number of threads
-    omp_set_num_threads(argv[3]); // Adjust the number of threads like 16 or 20 as per your scenario
+    omp_set_num_threads(std::atoi(argv[3])); // Adjust the number of threads like 16 or 20 as per your scenario
 
     // Now call the parallel sort
     __gnu_parallel::sort(data.begin(), data.end());
