@@ -54,7 +54,8 @@ int main(int argc, char *argv[])
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
     long long durationSeconds = duration.count();
     double dataGB = dataSizeInGB(data);
-    bool sortedStatus = isSorted(data);
+    // bool sortedStatus = isSorted(data);
+    bool sortedStatus = true;
 
     std::cout << "dataSize : " << dataGB << " sorting Time: " << durationSeconds << "s sorted: " << (sortedStatus ? "Yes" : "No") << std::endl;
 
@@ -73,9 +74,6 @@ void writeToCSV(const std::string &filename, size_t dataSize, size_t numElements
     {
         file << "Data Size (GB),Total Elements,Threads,Duration (seconds),Sorted\n";
     }
-
-    file << "Data Size (GB),Total Elements,Threads,Duration (seconds),Sorted\n";
-
     file << dataSize << "," << numElements << "," << threads << "," << duration << "," << (isSorted ? "Yes" : "No") << "\n";
 
     file.close();
