@@ -51,13 +51,14 @@ int main(int argc, char *argv[])
     __gnu_parallel::sort(data.begin(), data.end());
 
     auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start).count;
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+    long long durationSeconds = duration.count();
     double dataGB = dataSizeInGB(data);
     bool sortedStatus = isSorted(data);
 
-    std::cout << "dataSize : " << dataGB << " sorting Time: " << duration.count() << "s sorted: " << (sortedStatus ? "Yes" : "No") << std::endl;
+    std::cout << "dataSize : " << dataGB << " sorting Time: " << durationSeconds << "s sorted: " << (sortedStatus ? "Yes" : "No") << std::endl;
 
-    writeToCSV("performance_metrics.csv", dataGB, numElements, threads, duration, sortedStatus);
+    writeToCSV("performance_metrics.csv", dataGB, numElements, threads, durationSeconds, sortedStatus);
     return 0;
 }
 
