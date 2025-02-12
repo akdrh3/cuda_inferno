@@ -64,14 +64,21 @@ int main(int argc, char *argv[])
 
 void writeToCSV(const std::string &filename, size_t dataSize, size_t numElements, int threads, long long duration, bool isSorted)
 {
-    std::ofstream file(filename);
+    std::ofstream file(filename, std::ios::app);
+
+    std::ifstream testFile(filename);
+    bool isEmpty = testFile.peek() == std::ifstream::traits_type::eof();
+    // If file is empty, write the header
+    if (isEmpty)
+    {
+        file << "Data Size (GB),Total Elements,Threads,Duration (seconds),Sorted\n";
+    }
 
     file << "Data Size (GB),Total Elements,Threads,Duration (seconds),Sorted\n";
 
     file << dataSize << "," << numElements << "," << threads << "," << duration << "," << (isSorted ? "Yes" : "No") << "\n";
 
     file.close();
-    std::cout << "CSV file: " << filename << std::endl;
 }
 
 std::vector<double> readDoublesFromFile(const std::string &filename, size_t numElements)
