@@ -7,7 +7,7 @@
 #include <omp.h>
 #include <chrono> // for omp_set_num_threads
 
-void writeToCSV(const std::string &filename, size_t dataSize, size_t numElements, int threads, long long duration, bool isSorted);
+void writeToCSV(const std::string &filename, size_t dataSize, size_t numElements, int threads, long long duration, long long dataTransfertime, bool isSorted);
 std::vector<double> readDoublesFromFile(const std::string &filename, size_t numElements);
 bool isSorted(const std::vector<double> &data)
 {
@@ -29,6 +29,19 @@ double dataSizeInGB(const std::vector<double> &data)
     return static_cast<double>(totalBytes) / (1024 * 1024 * 1024);
 }
 
+std::chrono::time_point<std::chrono::high_resolution_clock> start;
+
+void timerStart()
+{
+    start = std::chrono::high_resolution_clock::now();
+}
+
+long long timerStop()
+{
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+    return duration.count();
+}
 int main(int argc, char *argv[])
 {
     if (argc < 4)
@@ -39,31 +52,30 @@ int main(int argc, char *argv[])
 
     std::string filename = argv[1];                    // First argument is the filename
     size_t numElements = std::atoi(argv[2]) * 1000000; // Second argument is the number of elements to read
-
+    timerStart();
     std::vector<double> data = readDoublesFromFile(filename, numElements);
+    long long dataTransfertime = timerStop();
     int threads = std::atoi(argv[3]);
 
     // Set the number of threads
     omp_set_num_threads(threads); // Adjust the number of threads like 16 or 20 as per your scenario
-    auto start = std::chrono::high_resolution_clock::now();
+    timerStart();
 
     // Now call the parallel sort
     __gnu_parallel::sort(data.begin(), data.end());
 
-    auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
-    long long durationSeconds = duration.count();
     double dataGB = dataSizeInGB(data);
+    long long durationSeconds = timerStop();
     // bool sortedStatus = isSorted(data);
     bool sortedStatus = true;
 
     std::cout << "dataSize : " << dataGB << " sorting Time: " << durationSeconds << "s sorted: " << (sortedStatus ? "Yes" : "No") << std::endl;
 
-    writeToCSV("performance_metrics.csv", dataGB, numElements, threads, durationSeconds, sortedStatus);
+    writeToCSV("performance_metrics.csv", dataGB, numElements, threads, durationSeconds, dataTransfertime, sortedStatus);
     return 0;
 }
 
-void writeToCSV(const std::string &filename, size_t dataSize, size_t numElements, int threads, long long duration, bool isSorted)
+void writeToCSV(const std::string &filename, size_t dataSize, size_t numElements, int threads, long long duration, long long dataTransfertime, bool isSorted)
 {
     std::ofstream file(filename, std::ios::app);
 
@@ -72,9 +84,9 @@ void writeToCSV(const std::string &filename, size_t dataSize, size_t numElements
     // If file is empty, write the header
     if (isEmpty)
     {
-        file << "Data Size (GB),Total Elements,Threads,Duration (seconds),Sorted\n";
+        file << "Data Size (GB),Total Elements,Threads,Duration (s), dataTransfer Time (s),Sorted\n";
     }
-    file << dataSize << "," << numElements << "," << threads << "," << duration << "," << (isSorted ? "Yes" : "No") << "\n";
+    file << dataSize << "," << numElements << "," << threads << "," << duration << "," << dataTransfertime << "," << (isSorted ? "Yes" : "No") << "\n";
 
     file.close();
 }
