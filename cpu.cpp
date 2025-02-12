@@ -1,6 +1,29 @@
 #include <iostream>
 #include <vector>
 #include <parallel/algorithm> // Include the header for parallel algorithms
+#include <fstream>
+#include <string>
+
+std::vector<double> readDoublesFromFile(const std::string &filename)
+{
+    std::ifstream file(filename);
+    std::vector<double> data;
+
+    if (!file)
+    {
+        std::cerr << "Unable to open file " << filename << std::endl;
+        return data; // Return an empty vector if the file cannot be opened
+    }
+
+    double value;
+    while (file >> value)
+    {
+        data.push_back(value);
+    }
+
+    file.close();
+    return data;
+}
 
 int main()
 {
@@ -16,7 +39,13 @@ int main()
         std::cout << n << " ";
     }
 
+    int result = sizet();
+
     return 0;
 }
 
-// hi
+int sizet()
+{
+    std::cout << "The size of size_t is " << sizeof(size_t) << " bytes." << std::endl;
+    return 0;
+}
