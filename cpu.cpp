@@ -25,6 +25,12 @@ std::vector<double> readDoublesFromFile(const std::string &filename)
     return data;
 }
 
+int sizet()
+{
+    std::cout << "The size of size_t is " << sizeof(size_t) << " bytes." << std::endl;
+    return 0;
+}
+
 int main()
 {
     // Create a vector with some unsorted data
@@ -41,11 +47,5 @@ int main()
 
     int result = sizet();
 
-    return 0;
-}
-
-int sizet()
-{
-    std::cout << "The size of size_t is " << sizeof(size_t) << " bytes." << std::endl;
     return 0;
 }
