@@ -25,7 +25,7 @@ struct SortingInfo
     bool isSorted;
 } SORTINGINFO;
 
-void readFileToUnifiedMemory(const char *filename, double **data, size_t *numElements);
+void readFileToUnifiedMemory(const char *filename, double *data, uint64_t numElements);
 
 // filename size workload
 int main(int argc, char *argv[])
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     cudaEvent_t event, data_trans_start, data_trans_stop;
     cudaEventCreate(&event);
 
-    cuda_timer_start(&data_trans_start, data_trans_stop);
+    cuda_timer_start(&data_trans_start, &data_trans_stop);
     readFileToUnifiedMemory(file_name, unSorted, input_size);
     double data_trans_time = cuda_timer_stop(data_trans_start, data_trans_stop) / 1000.0;
     print_array_device(unSorted, 5);
