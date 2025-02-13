@@ -21,6 +21,8 @@ extern "C"
 bool isSorted(const std::vector<double> &data);
 void readFileToUnifiedMemory(const char *filename, double *data, uint64_t numElements);
 void printSortInfo(struct SortingInfo sortInfo);
+void writeToCSV(const std::string &filename, const SortingInfo &SORTINGINFO);
+
 void sortOnCPU(double *start, double *end)
 {
     __gnu_parallel::sort(start, end);
@@ -112,6 +114,31 @@ void readFileToUnifiedMemory(const char *filename, double *data, uint64_t size_o
         }
     }
     fclose(file);
+}
+
+void writeToCSV(const std::string &filename, const SortingInfo &SORTINGINFO)
+{
+    std::ofstream file(filename, std::ios::app);
+
+    std::ifstream testFile(filename);
+    bool isEmpty = testFile.peek() == std::ifstream::traits_type::eof();
+
+    // If file is empty, write the header
+    if (isEmpty)
+    {
+        file << "Data Size (GB),Total Elements,CPU workload,Data Transfer Time (s),Batch Sort Time (s),Merge Sort Time (s),Total Time (s), Sorted\n";
+    }
+
+    file << SORTINGINFO.dataSizeGB << ","
+         << SORTINGINFO.numElements << ","
+         << SORTINGINFO.workload_cpu << ","
+         << SORTINGINFO.dataTransferTime << ","
+         << SORTINGINFO.batchSortTime << ","
+         << SORTINGINFO.mergeSortTime << ","
+         << SORTINGINFO.totalTime << ","
+         << (SORTINGINFO.isSorted ? "Yes" : "No") << "\n";
+
+    file.close();
 }
 
 void printSortInfo(struct SortingInfo sortInfo)
