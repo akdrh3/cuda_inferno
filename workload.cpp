@@ -1,5 +1,5 @@
-#include "workload.h"
 #include <fstream>
+#include <iomanip> // Include for std::fixed and std::setprecision
 #include <string>
 
 void writeToCSV(const std::string &filename, const SortingInfo &SORTINGINFO)
@@ -14,10 +14,11 @@ void writeToCSV(const std::string &filename, const SortingInfo &SORTINGINFO)
         file << "Data Size (GB),Total Elements,CPU workload,Data Transfer Time (s),Batch Sort Time (s),Merge Sort Time (s),Total Time (s),Sorted\n";
     }
 
+    file << std::fixed << std::setprecision(2); // Set fixed-point notation with two decimals
     file << SORTINGINFO.dataSizeGB << ","
          << SORTINGINFO.numElements << ","
-         << SORTINGINFO.workload_cpu << ","
-         << SORTINGINFO.dataTransferTime << ","
+         << std::fixed << std::setprecision(1) << SORTINGINFO.workload_cpu << ","
+         << std::fixed << std::setprecision(2) << SORTINGINFO.dataTransferTime << ","
          << SORTINGINFO.batchSortTime << ","
          << SORTINGINFO.mergeSortTime << ","
          << SORTINGINFO.totalTime << ","
