@@ -27,7 +27,7 @@ struct SortingInfo
 
 void readFileToUnifiedMemory(const char *filename, double *data, uint64_t numElements);
 void printSortInfo(struct SortingInfo sortInfo);
-__device__ void print_array_device(double *array, int64_t array_size);
+__device__ void print_array_device(double *array, int64_t array_size)
 {
     for (int64_t i = 0; i < array_size; ++i)
     {
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     SORTINGINFO.durationSeconds = data_trans_time;  // Just for reading, adjust according to actual sort
     SORTINGINFO.dataTransferTime = data_trans_time; // Simplified assumption
     SORTINGINFO.isSorted = false;                   // Update after sorting
-    printSortInfo();
+    printSortInfo(SORTINGINFO);
 
     HANDLE_ERROR(cudaFree(unSorted));
     return 0;
@@ -100,5 +100,5 @@ void printSortInfo(struct SortingInfo sortInfo)
     printf("CPU Workload (%%): %.1f\n", sortInfo.workload_cpu);
     printf("Duration (Seconds): %.2f\n", sortInfo.durationSeconds);
     printf("Data Transfer Time (Seconds): %.2f\n", sortInfo.dataTransferTime);
-    printf("Is Sorted: %s\n", sortInfo.isSorted ? "True" : "False")
+    printf("Is Sorted: %s\n", sortInfo.isSorted ? "True" : "False");
 }
