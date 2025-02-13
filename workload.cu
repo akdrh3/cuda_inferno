@@ -21,8 +21,6 @@ extern "C"
 bool isSorted(const std::vector<double> &data);
 void readFileToUnifiedMemory(const char *filename, double *data, uint64_t numElements);
 void printSortInfo(struct SortingInfo sortInfo);
-void writeToCSV(const std::string &filename, const SortingInfo &SORTINGINFO);
-
 void sortOnCPU(double *start, double *end)
 {
     __gnu_parallel::sort(start, end);
