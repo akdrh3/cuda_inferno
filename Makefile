@@ -44,6 +44,6 @@ $(WORKLOAD_OUTPUT): workload.o $(OBJS)
 
 # Clean rule to remove object files and binaries
 clean:
-	rm -f *.o $(MERGESORT_OUTPUT) $(BASELINE_OUTPUT)
+	rm -f *.o $(MERGESORT_OUTPUT) $(BASELINE_OUTPUT) $(WORKLOAD_OUTPUT)
 
 .PHONY: all clean
