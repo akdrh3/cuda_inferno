@@ -145,7 +145,6 @@ void printSortInfo(struct SortingInfo sortInfo)
 {
     printf("Data Size (GB): %.2f\n", sortInfo.dataSizeGB);
     printf("Number of Elements: %zu\n", sortInfo.numElements);
-    printf("Threads: %d\n", sortInfo.threads);
     printf("CPU Workload (%%): %.1f\n", sortInfo.workload_cpu);
     printf("Data Transfer Time (Seconds): %.2f\n", sortInfo.dataTransferTime);
     printf("batch sorting Time (Seconds): %.2f\n", sortInfo.batchSortTime);

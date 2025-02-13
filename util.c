@@ -100,16 +100,3 @@ int isRangeSorted_cpu(int *arr, size_t start, size_t end)
     }
     return 1; // The range is sorted
 }
-
-struct SortingInfo
-{
-    double dataSizeGB;
-    size_t numElements;
-    int threads;
-    float workload_cpu;
-    double dataTransferTime;
-    bool isSorted;
-    double batchSortTime;
-    double mergeSortTime;
-    double totalTime;
-} SORTINGINFO;
