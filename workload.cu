@@ -20,9 +20,11 @@ struct SortingInfo
     size_t numElements;
     int threads;
     float workload_cpu;
-    double durationSeconds;
     double dataTransferTime;
     bool isSorted;
+    double batchSortTime;
+    double mergeSortTime;
+    double totalTime;
 } SORTINGINFO;
 
 bool isSorted(const std::vector<double> &data);
@@ -55,23 +57,15 @@ int main(int argc, char *argv[])
     double *unSorted = NULL;
     HANDLE_ERROR(cudaMallocManaged(&unSorted, input_size * sizeof(double))); // allocate unified memory
 
-    cudaEvent_t event, data_trans_start, data_trans_stop;
+    cudaEvent_t event, data_trans_start, data_trans_stop, batchSort_start, batchSort_stop, mergeSort_start, mergeSort_stop;
     cudaEventCreate(&event);
 
     cuda_timer_start(&data_trans_start, &data_trans_stop);
     readFileToUnifiedMemory(file_name, unSorted, input_size);
     double data_trans_time = cuda_timer_stop(data_trans_start, data_trans_stop) / 1000.0;
-    // print_array_device(unSorted, 5);
-
-    SORTINGINFO.dataSizeGB = (input_size * sizeof(double)) / (double)(1024 * 1024 * 1024);
-    SORTINGINFO.numElements = input_size;
-    SORTINGINFO.workload_cpu = workload_cpu;
-    SORTINGINFO.durationSeconds = data_trans_time;  // Just for reading, adjust according to actual sort
-    SORTINGINFO.dataTransferTime = data_trans_time; // Simplified assumption
-    SORTINGINFO.isSorted = false;                   // Update after sorting
-    // printSortInfo(SORTINGINFO);
 
     uint64_t splitIndex = static_cast<size_t>(workload_cpu * input_size);
+    cuda_timer_start(&batchSort_start, &batchSort_stop);
 #pragma omp parallel sections
     {
 #pragma omp section
@@ -84,10 +78,14 @@ int main(int argc, char *argv[])
             sortOnGPU(unSorted + splitIndex, unSorted + input_size);
         }
     }
+    double batch_sort_time = cuda_timer_stop(batchSort_start, batchSort_stop) / 1000.0;
+
+    cuda_timer_start(&mergeSort_start, &mergeSort_stop);
 
     // Merging sections (handled on CPU for simplicity)
     std::vector<double> sortedData(input_size);
     std::merge(unSorted, unSorted + splitIndex, unSorted + splitIndex, unSorted + input_size, sortedData.begin());
+    double mergeSort_time = cuda_timer_stop(mergeSort_start, mergeSort_stop) / 1000.0;
 
     if (isSorted(sortedData))
     {
@@ -97,6 +95,16 @@ int main(int argc, char *argv[])
     {
         printf("not sorted\n");
     }
+
+    SORTINGINFO.dataSizeGB = (input_size * sizeof(double)) / (double)(1024 * 1024 * 1024);
+    SORTINGINFO.numElements = input_size;
+    SORTINGINFO.workload_cpu = workload_cpu;        // Just for reading, adjust according to actual sort
+    SORTINGINFO.dataTransferTime = data_trans_time; // Simplified assumption
+    SORTINGINFO.batchSortTime = batch_sort_time;
+    SORTINGINFO.mergeSortTime = mergeSort_time;
+    SORTINGINFO.totalTime = data_trans_time + batch_sort_time + mergeSort_time;
+    SORTINGINFO.isSorted = isSorted(sortedData); // Update after sorting
+    printSortInfo(SORTINGINFO);
     HANDLE_ERROR(cudaFree(unSorted));
     return 0;
 }
@@ -128,8 +136,10 @@ void printSortInfo(struct SortingInfo sortInfo)
     printf("Number of Elements: %zu\n", sortInfo.numElements);
     printf("Threads: %d\n", sortInfo.threads);
     printf("CPU Workload (%%): %.1f\n", sortInfo.workload_cpu);
-    printf("Duration (Seconds): %.2f\n", sortInfo.durationSeconds);
     printf("Data Transfer Time (Seconds): %.2f\n", sortInfo.dataTransferTime);
+    printf("batch sorting Time (Seconds): %.2f\n", sortInfo.batchSortTime);
+    printf("merge sorting Time (Seconds): %.2f\n", sortInfo.mergeSortTime);
+    printf("Total Time (Seconds): %.2f\n", sortInfo.totalTime);
     printf("Is Sorted: %s\n", sortInfo.isSorted ? "True" : "False");
 }
 
