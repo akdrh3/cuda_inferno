@@ -18,19 +18,6 @@ extern "C"
 #include <algorithm>
 #include <cstdio>
 
-struct SortingInfo
-{
-    double dataSizeGB;
-    size_t numElements;
-    int threads;
-    float workload_cpu;
-    double dataTransferTime;
-    bool isSorted;
-    double batchSortTime;
-    double mergeSortTime;
-    double totalTime;
-} SORTINGINFO;
-
 bool isSorted(const std::vector<double> &data);
 void readFileToUnifiedMemory(const char *filename, double *data, uint64_t numElements);
 void printSortInfo(struct SortingInfo sortInfo);
