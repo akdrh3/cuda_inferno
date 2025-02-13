@@ -27,7 +27,7 @@ struct SortingInfo
 
 void readFileToUnifiedMemory(const char *filename, double *data, uint64_t numElements);
 void printSortInfo(struct SortingInfo sortInfo);
-__device__ void print_array_device(double *array, int64_t array_size)
+__device__ void print_array_device(double *array, int64_t array_size);
 {
     for (int64_t i = 0; i < array_size; ++i)
     {
