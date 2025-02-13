@@ -26,6 +26,7 @@ struct SortingInfo
 } SORTINGINFO;
 
 void readFileToUnifiedMemory(const char *filename, double *data, uint64_t numElements);
+void printSortInfo(struct SortingInfo sortInfo);
 __device__ void print_array_device(double *array, int64_t array_size)
 {
     for (int64_t i = 0; i < array_size; ++i)
@@ -48,7 +49,7 @@ int main(int argc, char *argv[])
     float workload_cpu = atof(argv[3]);
 
     double *unSorted = NULL;
-    HANDLE_ERROR(cudaMallocManaged(&unSorted, input_size * sizeof(double)));
+    HANDLE_ERROR(cudaMallocManaged(&unSorted, input_size * sizeof(double))); // allocate unified memory
 
     cudaEvent_t event, data_trans_start, data_trans_stop;
     cudaEventCreate(&event);
@@ -60,12 +61,11 @@ int main(int argc, char *argv[])
 
     SORTINGINFO.dataSizeGB = (input_size * sizeof(double)) / (double)(1024 * 1024 * 1024);
     SORTINGINFO.numElements = input_size;
-    SORTINGINFO.threads = omp_get_max_threads(); // Assuming OpenMP is used for parallelism
     SORTINGINFO.workload_cpu = workload_cpu;
     SORTINGINFO.durationSeconds = data_trans_time;  // Just for reading, adjust according to actual sort
     SORTINGINFO.dataTransferTime = data_trans_time; // Simplified assumption
     SORTINGINFO.isSorted = false;                   // Update after sorting
-    printf("successful");
+    printSortInfo();
 
     HANDLE_ERROR(cudaFree(unSorted));
     return 0;
@@ -90,4 +90,15 @@ void readFileToUnifiedMemory(const char *filename, double *data, uint64_t size_o
         }
     }
     fclose(file);
+}
+
+void printSortInfo(struct SortingInfo sortInfo)
+{
+    printf("Data Size (GB): %.2f\n", sortInfo.dataSizeGB);
+    printf("Number of Elements: %zu\n", sortInfo.numElements);
+    printf("Threads: %d\n", sortInfo.threads);
+    printf("CPU Workload (%%): %.1f\n", sortInfo.workload_cpu);
+    printf("Duration (Seconds): %.2f\n", sortInfo.durationSeconds);
+    printf("Data Transfer Time (Seconds): %.2f\n", sortInfo.dataTransferTime);
+    printf("Is Sorted: %s\n", sortInfo.isSorted ? "True" : "False")
 }
