@@ -14,5 +14,5 @@ for num_elements in "${elements_list[@]}"
 do
     for workload in "${workloads[@]}"
         echo "Running ./cpu with $num_elements elements with $workload cpu workload"
-        ./cpu $filename $num_elements $workload
+        ./workload $filename $num_elements $workload
 done
