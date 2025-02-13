@@ -25,6 +25,7 @@ struct SortingInfo
     bool isSorted;
 } SORTINGINFO;
 
+bool isSorted(const std::vector<double> &data);
 void readFileToUnifiedMemory(const char *filename, double *data, uint64_t numElements);
 void printSortInfo(struct SortingInfo sortInfo);
 
@@ -88,7 +89,14 @@ int main(int argc, char *argv[])
     std::vector<double> sortedData(input_size);
     std::merge(unSorted, unSorted + splitIndex, unSorted + splitIndex, unSorted + input_size, sortedData.begin());
 
-    printf("sorted!");
+    if (isSorted(sortedData))
+    {
+        printf("sorted!\n");
+    }
+    else
+    {
+        printf("not sorted\n");
+    }
     HANDLE_ERROR(cudaFree(unSorted));
     return 0;
 }
@@ -123,4 +131,16 @@ void printSortInfo(struct SortingInfo sortInfo)
     printf("Duration (Seconds): %.2f\n", sortInfo.durationSeconds);
     printf("Data Transfer Time (Seconds): %.2f\n", sortInfo.dataTransferTime);
     printf("Is Sorted: %s\n", sortInfo.isSorted ? "True" : "False");
+}
+
+bool isSorted(const std::vector<double> &data)
+{
+    for (uint64_t i = 1; i < data.size(); i++)
+    {
+        if (data[i - 1] > data[i])
+        {
+            return false;
+        }
+    }
+    return true;
 }
