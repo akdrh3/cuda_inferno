@@ -57,10 +57,25 @@ int main(int argc, char *argv[])
     SORTINGINFO.durationSeconds = data_trans_time;  // Just for reading, adjust according to actual sort
     SORTINGINFO.dataTransferTime = data_trans_time; // Simplified assumption
     SORTINGINFO.isSorted = false;                   // Update after sorting
-    printSortInfo(SORTINGINFO);
+    // printSortInfo(SORTINGINFO);
 
-    printf("%f\n", unSorted[input_size - 1]);
+    uint64_t splitIndex = static_cast<size_t>(workload_cpu * input_size);
+    // Launch CPU sort in a new thread
+    std::thread cpu_sort_thread([&]()
+                                { __gnu_parallel::sort(unSorted, unSorted + splitIndex); });
 
+    // Continue with GPU sort in the main thread
+    thrust::device_ptr<double> dev_ptr = thrust::device_pointer_cast(unSorted + splitIndex);
+    thrust::sort(thrust::device, dev_ptr, dev_ptr + (input_size - splitIndex));
+
+    // Wait for the CPU sort to finish
+    cpu_sort_thread.join();
+
+    // Merging sections (handled on CPU for simplicity)
+    std::vector<double> sortedData(input_size);
+    std::merge(unSorted, unSorted + splitIndex, unSorted + splitIndex, unSorted + input_size, sortedData.begin());
+
+    printf("sorted!");
     HANDLE_ERROR(cudaFree(unSorted));
     return 0;
 }
