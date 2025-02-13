@@ -75,12 +75,12 @@ int main(int argc, char *argv[])
     {
 #pragma omp section
         {
-            sortOnCPU(data, data + splitIndex);
+            sortOnCPU(unSorted, unSorted + splitIndex);
         }
 
 #pragma omp section
         {
-            sortOnGPU(data + splitIndex, data + totalSize);
+            sortOnGPU(unSorted + splitIndex, unSorted + input_size);
         }
     }
 
