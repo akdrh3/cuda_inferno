@@ -39,9 +39,15 @@ $(MERGESORT_OUTPUT): thrust_merge.o $(OBJS)
 $(BASELINE_OUTPUT): baseline.o $(OBJS)
 	$(NVCC) -o $@ baseline.o $(OBJS) $(CUDA_LIBS) -Xcompiler -fopenmp
 
-$(WORKLOAD_OUTPUT): workload.o $(OBJS)
-	$(NVCC) -o $@ workload.o $(OBJS) $(CUDA_LIBS) -Xcompiler -fopenmp
+workload: workload.o workload_cpp.o
+	nvcc -o workload workload.o workload_cpp.o
 
+workload.o: workload.cu
+	nvcc -c -rdc=true -Xcompiler -fopenmp -dc workload.cu
+
+workload_cpp.o: workload.cpp
+	g++ -c -fopenmp workload.cpp
+	
 # Clean rule to remove object files and binaries
 clean:
 	rm -f *.o $(MERGESORT_OUTPUT) $(BASELINE_OUTPUT) $(WORKLOAD_OUTPUT)

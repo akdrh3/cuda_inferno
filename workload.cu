@@ -2,6 +2,7 @@
 #include <thrust/sort.h>
 #include <thrust/device_ptr.h>
 #include <thrust/execution_policy.h>
+#include "workload.h"
 extern "C"
 {
 #include "util.h"
@@ -9,10 +10,13 @@ extern "C"
 #include <cmath>
 #include <climits>
 #include <stdio.h>
+#include <fstream>
+#include <string>
 
 #include <parallel/algorithm>
 #include <omp.h>
 #include <algorithm>
+#include <cstdio>
 
 struct SortingInfo
 {
