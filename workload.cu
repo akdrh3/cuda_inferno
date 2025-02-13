@@ -28,6 +28,17 @@ struct SortingInfo
 void readFileToUnifiedMemory(const char *filename, double *data, uint64_t numElements);
 void printSortInfo(struct SortingInfo sortInfo);
 
+void sortOnCPU(double *start, double *end)
+{
+    __gnu_parallel::sort(start, end);
+}
+
+void sortOnGPU(double *start, double *end)
+{
+    thrust::device_ptr<double> dev_ptr = thrust::device_pointer_cast(start);
+    thrust::sort(thrust::device, dev_ptr, thrust::device_pointer_cast(end));
+}
+
 int main(int argc, char *argv[])
 {
     if (argc < 4)
@@ -60,16 +71,18 @@ int main(int argc, char *argv[])
     // printSortInfo(SORTINGINFO);
 
     uint64_t splitIndex = static_cast<size_t>(workload_cpu * input_size);
-    // Launch CPU sort in a new thread
-    std::thread cpu_sort_thread([&]()
-                                { __gnu_parallel::sort(unSorted, unSorted + splitIndex); });
+#pragma omp parallel sections
+    {
+#pragma omp section
+        {
+            sortOnCPU(data, data + splitIndex);
+        }
 
-    // Continue with GPU sort in the main thread
-    thrust::device_ptr<double> dev_ptr = thrust::device_pointer_cast(unSorted + splitIndex);
-    thrust::sort(thrust::device, dev_ptr, dev_ptr + (input_size - splitIndex));
-
-    // Wait for the CPU sort to finish
-    cpu_sort_thread.join();
+#pragma omp section
+        {
+            sortOnGPU(data + splitIndex, data + totalSize);
+        }
+    }
 
     // Merging sections (handled on CPU for simplicity)
     std::vector<double> sortedData(input_size);
