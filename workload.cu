@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     SORTINGINFO.isSorted = false;                   // Update after sorting
     printSortInfo(SORTINGINFO);
 
-    printf("%.2f\n", unSorted[input_size - 1]);
+    printf("%f\n", unSorted[input_size - 1]);
 
     HANDLE_ERROR(cudaFree(unSorted));
     return 0;
