@@ -79,6 +79,7 @@ int main(int argc, char *argv[])
     std::merge(unSorted, unSorted + splitIndex, unSorted + splitIndex, unSorted + input_size, sortedData.begin());
     double mergeSort_time = cuda_timer_stop(mergeSort_start, mergeSort_stop) / 1000.0;
 
+    SortingInfo SORTINGINFO;
     SORTINGINFO.dataSizeGB = (input_size * sizeof(double)) / (double)(1024 * 1024 * 1024);
     SORTINGINFO.numElements = input_size;
     SORTINGINFO.workload_cpu = workload_cpu;        // Just for reading, adjust according to actual sort
