@@ -58,6 +58,7 @@ int main(int argc, char *argv[])
 
     uint64_t splitIndex = static_cast<size_t>(workload_cpu * input_size);
     cuda_timer_start(&batchSort_start, &batchSort_stop);
+    omp_set_num_threads(16);
 #pragma omp parallel sections
     {
 #pragma omp section
