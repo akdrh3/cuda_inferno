@@ -47,7 +47,7 @@ clean:
 	rm -f *.o $(MERGESORT_OUTPUT) $(BASELINE_OUTPUT) $(WORKLOAD_OUTPUT)
 
 debug: workload
-	/usr/local/cuda/bin/ncu --set full --kernel-name regex:.* --launch-skip 0 --launch-count 1 --output-profile workload_profile.ncu-report ./workload
+	/usr/local/cuda/bin/ncu --set full --kernel-name regex:.* --launch-skip 0 --launch-count 1 --export workload_profile.ncu-report ./workload
 
 
 .PHONY: all clean
