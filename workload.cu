@@ -30,8 +30,8 @@ void sortOnCPU(double *start, double *end)
 
 void sortOnGPU(double *start, double *end)
 {
-    thrust::device_ptr<double> dev_ptr = thrust::device_pointer_cast(start);
-    thrust::sort(thrust::device, dev_ptr, thrust::device_pointer_cast(end));
+    thrust::device_ptr<double> dev_ptr = thrust::universal_pointer_cast(start);
+    thrust::sort(thrust::device, dev_ptr, thrust::universal_pointer_cast(end));
 }
 
 int main(int argc, char *argv[])
