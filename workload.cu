@@ -46,9 +46,9 @@ int main(int argc, char *argv[])
     uint64_t input_size = strtoull(argv[2], NULL, 10) * 1000000;
     float workload_cpu = atof(argv[3]);
 
-    size_t free_byte, total_byte;
-    cudaMemGetInfo(&free_byte, &total_byte);
-    size_t needed_bytes = input_size * sizeof(double);
+    size_t heapSize = 40 * 1024 * 1024 * 1024;
+
+    HANDLE_ERROR(cudaDeviceSetLimit(cudaLimitMallocHeapSize, heapSize));
 
     double *unSorted = NULL;
     HANDLE_ERROR(cudaMallocManaged(&unSorted, input_size * sizeof(double))); // allocate unified memory
