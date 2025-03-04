@@ -46,6 +46,16 @@ int main(int argc, char *argv[])
     uint64_t input_size = strtoull(argv[2], NULL, 10) * 1000000;
     float workload_cpu = atof(argv[3]);
 
+    size_t free_byte, total_byte;
+    cudaMemGetInfo(&free_byte, &total_byte);
+    size_t needed_bytes = input_size * sizeof(double);
+
+    if (needed_bytes > free_byte)
+    {
+        std::cerr << "Error: Not enough memory. Needed: " << needed_bytes / 1024.0 / 1024.0 << " MB, Available: " << free_byte / 1024.0 / 1024.0 << " MB\n";
+        return EXIT_FAILURE;
+    }
+
     double *unSorted = NULL;
     HANDLE_ERROR(cudaMallocManaged(&unSorted, input_size * sizeof(double))); // allocate unified memory
 
