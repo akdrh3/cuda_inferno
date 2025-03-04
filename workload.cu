@@ -58,6 +58,9 @@ int main(int argc, char *argv[])
 
     cuda_timer_start(&data_trans_start, &data_trans_stop);
     readFileToUnifiedMemory(file_name, unSorted, input_size);
+
+    // Prefetch to GPU before sorting
+    HANDLE_ERROR(cudaMemPrefetchAsync(unSorted, input_size * sizeof(double), 0, 0));
     double data_trans_time = cuda_timer_stop(data_trans_start, data_trans_stop) / 1000.0;
 
     uint64_t splitIndex = static_cast<size_t>(workload_cpu * input_size);
