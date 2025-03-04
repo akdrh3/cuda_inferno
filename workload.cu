@@ -50,11 +50,11 @@ int main(int argc, char *argv[])
     cudaMemGetInfo(&free_byte, &total_byte);
     size_t needed_bytes = input_size * sizeof(double);
 
-    if (needed_bytes > free_byte)
-    {
-        std::cerr << "Error: Not enough memory. Needed: " << needed_bytes / 1024.0 / 1024.0 << " MB, Available: " << free_byte / 1024.0 / 1024.0 << " MB\n";
-        return EXIT_FAILURE;
-    }
+    // if (needed_bytes > free_byte)
+    // {
+    //     std::cerr << "Error: Not enough memory. Needed: " << needed_bytes / 1024.0 / 1024.0 << " MB, Available: " << free_byte / 1024.0 / 1024.0 << " MB\n";
+    //     return EXIT_FAILURE;
+    // }
 
     double *unSorted = NULL;
     HANDLE_ERROR(cudaMallocManaged(&unSorted, input_size * sizeof(double))); // allocate unified memory
