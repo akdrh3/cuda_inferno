@@ -59,49 +59,49 @@ int main(int argc, char *argv[])
     double *unSorted = NULL;
     HANDLE_ERROR(cudaMallocManaged(&unSorted, input_size * sizeof(double))); // allocate unified memory
 
-    cudaEvent_t event, data_trans_start, data_trans_stop, batchSort_start, batchSort_stop, mergeSort_start, mergeSort_stop;
-    cudaEventCreate(&event);
+    //     cudaEvent_t event, data_trans_start, data_trans_stop, batchSort_start, batchSort_stop, mergeSort_start, mergeSort_stop;
+    //     cudaEventCreate(&event);
 
-    cuda_timer_start(&data_trans_start, &data_trans_stop);
-    readFileToUnifiedMemory(file_name, unSorted, input_size);
-    double data_trans_time = cuda_timer_stop(data_trans_start, data_trans_stop) / 1000.0;
+    //     cuda_timer_start(&data_trans_start, &data_trans_stop);
+    //     readFileToUnifiedMemory(file_name, unSorted, input_size);
+    //     double data_trans_time = cuda_timer_stop(data_trans_start, data_trans_stop) / 1000.0;
 
-    uint64_t splitIndex = static_cast<size_t>(workload_cpu * input_size);
-    cuda_timer_start(&batchSort_start, &batchSort_stop);
-    omp_set_num_threads(16);
-#pragma omp parallel sections
-    {
-#pragma omp section
-        {
-            sortOnCPU(unSorted, unSorted + splitIndex);
-        }
+    //     uint64_t splitIndex = static_cast<size_t>(workload_cpu * input_size);
+    //     cuda_timer_start(&batchSort_start, &batchSort_stop);
+    //     omp_set_num_threads(16);
+    // #pragma omp parallel sections
+    //     {
+    // #pragma omp section
+    //         {
+    //             sortOnCPU(unSorted, unSorted + splitIndex);
+    //         }
 
-#pragma omp section
-        {
-            sortOnGPU(unSorted + splitIndex, unSorted + input_size);
-        }
-    }
-    double batch_sort_time = cuda_timer_stop(batchSort_start, batchSort_stop) / 1000.0;
+    // #pragma omp section
+    //         {
+    //             sortOnGPU(unSorted + splitIndex, unSorted + input_size);
+    //         }
+    //     }
+    //     double batch_sort_time = cuda_timer_stop(batchSort_start, batchSort_stop) / 1000.0;
 
-    cuda_timer_start(&mergeSort_start, &mergeSort_stop);
+    //     cuda_timer_start(&mergeSort_start, &mergeSort_stop);
 
-    // Merging sections (handled on CPU for simplicity)
-    std::vector<double> sortedData(input_size);
-    std::merge(unSorted, unSorted + splitIndex, unSorted + splitIndex, unSorted + input_size, sortedData.begin());
-    double mergeSort_time = cuda_timer_stop(mergeSort_start, mergeSort_stop) / 1000.0;
+    //     // Merging sections (handled on CPU for simplicity)
+    //     std::vector<double> sortedData(input_size);
+    //     std::merge(unSorted, unSorted + splitIndex, unSorted + splitIndex, unSorted + input_size, sortedData.begin());
+    //     double mergeSort_time = cuda_timer_stop(mergeSort_start, mergeSort_stop) / 1000.0;
 
-    SortingInfo SORTINGINFO;
-    SORTINGINFO.dataSizeGB = (input_size * sizeof(double)) / (double)(1024 * 1024 * 1024);
-    SORTINGINFO.numElements = input_size;
-    SORTINGINFO.workload_cpu = workload_cpu;        // Just for reading, adjust according to actual sort
-    SORTINGINFO.dataTransferTime = data_trans_time; // Simplified assumption
-    SORTINGINFO.batchSortTime = batch_sort_time;
-    SORTINGINFO.mergeSortTime = mergeSort_time;
-    SORTINGINFO.totalTime = data_trans_time + batch_sort_time + mergeSort_time;
-    SORTINGINFO.isSorted = true; // isSorted(sortedData); // Update after sorting
-    printSortInfo(SORTINGINFO);
+    //     SortingInfo SORTINGINFO;
+    //     SORTINGINFO.dataSizeGB = (input_size * sizeof(double)) / (double)(1024 * 1024 * 1024);
+    //     SORTINGINFO.numElements = input_size;
+    //     SORTINGINFO.workload_cpu = workload_cpu;        // Just for reading, adjust according to actual sort
+    //     SORTINGINFO.dataTransferTime = data_trans_time; // Simplified assumption
+    //     SORTINGINFO.batchSortTime = batch_sort_time;
+    //     SORTINGINFO.mergeSortTime = mergeSort_time;
+    //     SORTINGINFO.totalTime = data_trans_time + batch_sort_time + mergeSort_time;
+    //     SORTINGINFO.isSorted = true; // isSorted(sortedData); // Update after sorting
+    //     printSortInfo(SORTINGINFO);
 
-    writeToCSV("workload_performance_metrics.csv", SORTINGINFO);
+    //     writeToCSV("workload_performance_metrics.csv", SORTINGINFO);
     HANDLE_ERROR(cudaFree(unSorted));
     return 0;
 }
