@@ -1,7 +1,7 @@
 #include "gpu_util.cuh"
 #include <thrust/sort.h>
 #include <thrust/device_ptr.h>
-#include <thrust/execution_policy.h>
+
 #include "workload.h"
 extern "C"
 {
@@ -30,15 +30,37 @@ void sortOnCPU(double *start, double *end)
 
 void sortOnGPU(double *start, double *end)
 {
-    thrust::device_ptr<double> dev_ptr = thrust::device_pointer_cast(start);
-    thrust::sort(thrust::device, dev_ptr, thrust::device_pointer_cast(end));
+    uint64_t num_items = end - start;
+    printf("num_items = %lu\n", num_items);
+
+    // Temporary storage for sorting
+    void *d_temp_storage = nullptr;
+    uint64_t temp_storage_bytes = 0;
+
+    // Get the amount of temporary storage needed
+    cub::DeviceRadixSort::SortKeys<double>(d_temp_storage, temp_storage_bytes, start, start, num_items);
+    printf("temp_storage_bytes: %lu\n", temp_storage_bytes);
+
+    // Allocate managed memory for temporary storage
+    HANDLE_ERROR(cudaMallocManaged(&d_temp_storage, temp_storage_bytes));
+
+    // Run the sort operation
+    cub::DeviceRadixSort::SortKeys<double>(d_temp_storage, temp_storage_bytes, start, start, num_items);
+
+    // Free temporary storage
+    cudaFree(d_temp_storage);
+}
+
+void mergeOnCPU(double *start, double *mid, double *end, double *result)
+{
+    __gnu_parallel::merge(start, mid, mid, end, result);
 }
 
 int main(int argc, char *argv[])
 {
     if (argc < 4)
     {
-        printf("Usage: %s <filename> <arraysize in millions> <workload on cpu>\n");
+        printf("Usage: %s <filename> <arraysize in millions> <workload on cpu>\n", "./workload");
         return -1;
     }
 
@@ -46,9 +68,9 @@ int main(int argc, char *argv[])
     uint64_t input_size = strtoull(argv[2], NULL, 10) * 1000000;
     float workload_cpu = atof(argv[3]);
 
-    size_t heapSize = 40 * 1024 * 1024 * 1024;
+    // size_t heapSize = 1L * 1024 * 1024 * 1024;
 
-    HANDLE_ERROR(cudaDeviceSetLimit(cudaLimitMallocHeapSize, heapSize));
+    // HANDLE_ERROR(cudaDeviceSetLimit(cudaLimitMallocHeapSize, heapSize));
 
     double *unSorted = NULL;
     HANDLE_ERROR(cudaMallocManaged(&unSorted, input_size * sizeof(double))); // allocate unified memory
@@ -66,6 +88,12 @@ int main(int argc, char *argv[])
     uint64_t splitIndex = static_cast<size_t>(workload_cpu * input_size);
     cuda_timer_start(&batchSort_start, &batchSort_stop);
     omp_set_num_threads(16);
+
+    int device_id;
+    cudaGetDevice(&device_id);
+    // Prefetch the GPU part to the GPU
+    HANDLE_ERROR(cudaMemPrefetchAsync(unSorted + splitIndex, (input_size - splitIndex) * sizeof(double), device_id, 0));
+
 #pragma omp parallel sections
     {
 #pragma omp section
@@ -80,16 +108,22 @@ int main(int argc, char *argv[])
     }
     double batch_sort_time = cuda_timer_stop(batchSort_start, batchSort_stop) / 1000.0;
 
+    // bool sorted;
+    // for (uint64_t i = 1; i < input_size; i++)
+    // {
+    //     if (unSorted[i - 1] > unSorted[i])
+    //     {
+    //         sorted = false;
+    //     }
+    //     else sorted = true;
+    // }
+    // printf("unsorted sorted? : %d \n", sorted);
+
     cuda_timer_start(&mergeSort_start, &mergeSort_stop);
 
     // Merging sections (handled on CPU for simplicity)
-    std::vector<double> sortedData(input_size);
-#pragma omp parallel
-    {
-        __gnu_parallel::merge(unSorted, unSorted + splitIndex,
-                              unSorted + splitIndex, unSorted + input_size,
-                              sortedData.begin());
-    }
+    double *sortedData = new double[input_size];
+    mergeOnCPU(unSorted, unSorted + splitIndex, unSorted + input_size, sortedData);
 
     double mergeSort_time = cuda_timer_stop(mergeSort_start, mergeSort_stop) / 1000.0;
 
@@ -101,7 +135,7 @@ int main(int argc, char *argv[])
     SORTINGINFO.batchSortTime = batch_sort_time;
     SORTINGINFO.mergeSortTime = mergeSort_time;
     SORTINGINFO.totalTime = data_trans_time + batch_sort_time + mergeSort_time;
-    SORTINGINFO.isSorted = true; // isSorted(sortedData); // Update after sorting
+    SORTINGINFO.isSorted = "true"; // isSorted(sortedData); // Update after sorting
     printSortInfo(SORTINGINFO);
 
     writeToCSV("workload_performance_metrics.csv", SORTINGINFO);
