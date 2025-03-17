@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     HANDLE_ERROR(cudaMemPrefetchAsync(unSorted, input_size * sizeof(double), 0, 0));
     double dataPrefetchTime = cuda_timer_stop(dataPrefetchTimeStart, dataPrefetchTimeStop) / 1000.0;
     std::cout << "data Prefetch Time: " << dataPrefetchTime << std::endl;
-    SORTINGINFO->dataPrefetchTime = dataPrefetchTime;
+    SORTINGINFO.dataPrefetchTime = dataPrefetchTime;
 
     uint64_t splitIndex = workload_cpu * input_size;
     cuda_timer_start(&batchSort_start, &batchSort_stop);
