@@ -17,6 +17,7 @@ struct SortingInfo
     double cpuSortTime;
     double batchSortTime;
     double mergeSortTime;
+    double totalSortTime;
     double totalTime;
     bool isSorted;
 };
