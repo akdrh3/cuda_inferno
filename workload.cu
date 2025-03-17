@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 
     // Merging sections (handled on CPU for simplicity)
     double *sortedData = new double[input_size];
-    merge_on_cpu(unSorted, unSorted + splitIndex, unSorted + input_size, sortedData);
+    merge_on_cpu(unSorted, unSorted + splitIndex, unSorted + input_size, sortedData, &SORTINGINFO);
 
     double mergeSort_time = cuda_timer_stop(mergeSort_start, mergeSort_stop) / 1000.0;
 
