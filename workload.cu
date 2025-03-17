@@ -62,6 +62,7 @@ void gpu_merge(double *start, double *end, SortingInfo *SORTINGINFO)
     }
     double gpuSortTime = cuda_timer_stop(gpuSortTimeStart, gpuSortTimeStop) / 1000.0;
     std::cout << "gpu sorting Time: " << gpuSortTime << std::endl;
+    SORTINGINFO->gpuSortTime = gpuSortTime;
 
     // Free temporary storage
     cudaFree(d_temp_storage);
@@ -69,7 +70,6 @@ void gpu_merge(double *start, double *end, SortingInfo *SORTINGINFO)
 
 void merge_on_cpu(double *start, double *mid, double *end, double *result, SortingInfo *SORTINGINFO)
 {
-
     __gnu_parallel::merge(start, mid, mid, end, result);
 }
 
@@ -107,6 +107,7 @@ int main(int argc, char *argv[])
     HANDLE_ERROR(cudaMemPrefetchAsync(unSorted, input_size * sizeof(double), 0, 0));
     double dataPrefetchTime = cuda_timer_stop(dataPrefetchTimeStart, dataPrefetchTimeStop) / 1000.0;
     std::cout << "data Prefetch Time: " << dataPrefetchTime << std::endl;
+    SORTINGINFO->dataPrefetchTime = dataPrefetchTime;
 
     uint64_t splitIndex = workload_cpu * input_size;
     cuda_timer_start(&batchSort_start, &batchSort_stop);

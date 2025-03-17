@@ -12,6 +12,7 @@ struct SortingInfo
     double workload_cpu;
     int cpu_thread_num;
     double dataTransferTime;
+    double dataPrefetchTime;
     double gpuSortTime;
     double cpuSortTime;
     double batchSortTime;
