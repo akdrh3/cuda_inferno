@@ -1,4 +1,5 @@
 // workload.h
+#include <string>
 #ifndef WORKLOAD_H
 #define WORKLOAD_H
 
@@ -8,7 +9,8 @@ struct SortingInfo
 {
     double dataSizeGB;
     size_t numElements;
-    float workload_cpu;
+    double workload_cpu;
+    int cpu_thread_num;
     double dataTransferTime;
     double batchSortTime;
     double mergeSortTime;

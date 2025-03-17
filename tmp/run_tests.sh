@@ -8,7 +8,7 @@ fi
 
 # numbers=(1 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384)
 # Initialize variables
-numbers=(500 1000 2000 3000 4000 5000)
+numbers=(6710 8054 9396 10738 12080 13422)
 
 # Clear log files
 > thrust_merge_error_log.txt

@@ -1,53 +1,36 @@
-# Compiler and flags
-CC = gcc
-CFLAGS = -c -std=c99 -Wall -Wextra -fopenmp
-
-NVCC = /usr/local/cuda/bin/nvcc
-NVCCFLAGS = -c -rdc=true -Xcompiler -fopenmp
-
-# Files
-DEPS = util.h
+# Files and dependencies
+DEPS = util.h 
 CUDEPS = gpu_util.cuh
-OBJS = util.o gpu_util.o
+OBJS = util.o gpu_util.o workload.o 
 
-# Output
-MERGESORT_OUTPUT = thrust_merge
-BASELINE_OUTPUT = baseline
-WORKLOAD_OUTPUT = workload
+# Compiler settings
+CC=gcc
+NVCC=/usr/local/cuda-12.4/bin/nvcc 
 
-# CUDA Libraries
-CUDA_LIBS = -lcudart -lstdc++ -lgomp
+# Compiler flags
+CFLAGS=-O3 -std=c11
+NVCCFLAGS=-O3 -arch=sm_50 -std=c++14 -Xcompiler -fopenmp -D_GLIBCXX_PARALLEL -I/usr/local/cuda-12.4/include
 
-# Rules
-all: $(MERGESORT_OUTPUT)
-baseline: $(BASELINE OUTPUT)
-workload: $(WORKLOAD_OUTPUT)
+# Output executable name
+EXE=workload
 
-# Rule for C files
-%.o: %.c $(DEPS)
-	$(CC) $(CFLAGS) -o $@ $<
+# Main target: make workload
+workload: $(OBJS)
+	$(NVCC) $(NVCCFLAGS) -o $(EXE) $^ -lpthread
 
-# Rule for CUDA (.cu) files
-%.o: %.cu $(CUDEPS)
-	$(NVCC) $(NVCCFLAGS) -dc -o $@ $<
+# Compile CUDA source files
+workload.o: workload.cu $(CUDEPS)
+	$(NVCC) $(NVCCFLAGS) -c $< -o $@
 
-# Rule to create thrust_merge binary
-$(MERGESORT_OUTPUT): thrust_merge.o $(OBJS)
-	$(NVCC) -o $@ thrust_merge.o $(OBJS) $(CUDA_LIBS) -Xcompiler -fopenmp
+# Compile C source files
+util.o: util.c $(DEPS)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Rule to create baseline binary
-$(BASELINE_OUTPUT): baseline.o $(OBJS)
-	$(NVCC) -o $@ baseline.o $(OBJS) $(CUDA_LIBS) -Xcompiler -fopenmp
+# Compile other CUDA source files as needed
+gpu_util.o: gpu_util.cu $(CUDEPS)
+	$(NVCC) $(NVCCFLAGS) -c $< -o $@
 
-$(WORKLOAD_OUTPUT): workload.o $(OBJS)
-	$(NVCC) -o $@ workload.o $(OBJS) $(CUDA_LIBS) -Xcompiler -fopenmp
-
-# Clean rule to remove object files and binaries
+# Clean up compiled files
 clean:
-	rm -f *.o $(MERGESORT_OUTPUT) $(BASELINE_OUTPUT) $(WORKLOAD_OUTPUT)
+	rm -f $(EXE) $(OBJS)
 
-debug: workload
-	/usr/local/cuda/bin/ncu --set full --kernel-name regex:.* --launch-skip 0 --launch-count 1 --export workload_profile.ncu-report ./workload
-
-
-.PHONY: all clean

@@ -1,13 +1,14 @@
 #!/bin/bash
 
 # List of the number of elements to test with
-# elements_list=(100 200 400 800 1600 3200 6400 12800 25600 51200 102400 204800 409600)
-elements_list=(204800 230400 256000 281600 307200 332800 358400 384000 409600)
+#elements_list=(5368 6710 8054 9396 10738 12080 13400)
+elements_list=(5368 8054)
 
 # Filename and number of threads
-filename="12800numbers.txt"
-workloads=(0 0.2 0.4 0.6 0.8 1)
-
+filename="numbers_21000000000.txt"
+workloads=(1)
+#thread_nums=(16 24 32 40 48 56 64 72 80)
+thread_nums=(1 2 4 8)
 > workload_performance_metrics.csv
 
 # Loop through each element in the elements list
@@ -15,7 +16,10 @@ for num_elements in "${elements_list[@]}"
 do
     for workload in "${workloads[@]}"
     do
-        echo "Running ./workload with $num_elements elements with $workload cpu workload"
-        ./workload $filename $num_elements $workload
+        for thread_num in "${thread_nums[@]}"
+        do
+            echo "Running ./workload with $num_elements elements with $workload cpu workload with $thread_num threads"
+            ./workload $filename $num_elements $workload $thread_num
+        done
     done
 done

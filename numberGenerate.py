@@ -1,4 +1,4 @@
-import random as r
+import random
 import time
 import math
 from datetime import datetime
@@ -17,10 +17,10 @@ file_name = f"numbers_{data_size}.txt"
 parse = math.ceil(data_size/10)
 with open(file_name, "w") as f:
     for i in range(0,data_size):
-        random_float = r.random()
-        f.write(f"{random_float}\n")
+        random_unsigned = random.randint(0, 2**64 - 1)
+        f.write(f"{random_unsigned}\n")
         if(i%parse == 0):
-            print(f"just generated {i}th element: {random_float}")
+            print(f"just generated {i}th element: {random_unsigned}")
 
 end_time = time.time()
 elapsed_time = end_time - start_time

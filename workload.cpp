@@ -11,13 +11,14 @@ void writeToCSV(const std::string &filename, const SortingInfo &SORTINGINFO)
 
     if (isEmpty)
     {
-        file << "Data Size (GB),Total Elements,CPU workload,Data Transfer Time (s),Batch Sort Time (s),Merge Sort Time (s),Total Time (s),Sorted\n";
+        file << "Data Size (GB),Total Elements,CPU workload,cpu_thread_num,Data Transfer Time (s),Batch Sort Time (s),Merge Sort Time (s),Total Time (s), Sorted\n";
     }
 
     file << std::fixed << std::setprecision(2); // Set fixed-point notation with two decimals
     file << SORTINGINFO.dataSizeGB << ","
          << SORTINGINFO.numElements << ","
          << std::fixed << std::setprecision(1) << SORTINGINFO.workload_cpu << ","
+         SORTINGINFO.cpu_thread_num << ","
          << std::fixed << std::setprecision(2) << SORTINGINFO.dataTransferTime << ","
          << SORTINGINFO.batchSortTime << ","
          << SORTINGINFO.mergeSortTime << ","
