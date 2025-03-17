@@ -24,7 +24,7 @@ bool isSorted(const std::vector<double> &data);
 void readFileToUnifiedMemory(const char *filename, double *data, uint64_t numElements);
 void printSortInfo(struct SortingInfo sortInfo);
 void writeToCSV(const std::string &filename, const SortingInfo &SORTINGINFO);
-void cpu_merge(double *unSorted, uint64_t sizeOfArray, int threadNum);
+void cpu_merge(double *unSorted, uint64_t sizeOfArray, int threadNum, SortingInfo *SORTINGINFO);
 
 void gpu_merge(double *start, double *end, SortingInfo *SORTINGINFO)
 {
@@ -160,8 +160,6 @@ int main(int argc, char *argv[])
     }
 
     printf("unsorted sorted? : %d \n", sorted);
-
-    SortingInfo SORTINGINFO;
     SORTINGINFO.dataSizeGB = (input_size * sizeof(double)) / (double)(1024 * 1024 * 1024);
     SORTINGINFO.numElements = input_size;
     SORTINGINFO.workload_cpu = workload_cpu; // Just for reading, adjust according to actual sort
