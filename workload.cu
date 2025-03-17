@@ -213,7 +213,7 @@ void writeToCSV(const std::string &filename, const SortingInfo &SORTINGINFO)
     // If file is empty, write the header
     if (isEmpty)
     {
-        file << "Data Size (GB),Total Elements,CPU workload,cpu_thread_num,Data Transfer Time (s),Batch Sort Time (s),Merge Sort Time (s),Total Time (s), Sorted\n";
+        file << "Data Size (GB),Total Elements,CPU workload, cpu_thread_num, Data Transfer Time (s),Data Prefetch Time (s),GPU Sort Time (s), CPU Sort Time(s) ,Batch Sort Time (s),Merge Sort Time (s),Total Time (s), Sorted\n";
     }
 
     file << SORTINGINFO.dataSizeGB << ","
@@ -221,6 +221,7 @@ void writeToCSV(const std::string &filename, const SortingInfo &SORTINGINFO)
          << SORTINGINFO.workload_cpu << ","
          << SORTINGINFO.cpu_thread_num << ","
          << SORTINGINFO.dataTransferTime << ","
+         << SORTINGINFO.dataPrefetchTime << ","
          << SORTINGINFO.gpuSortTime << ","
          << SORTINGINFO.cpuSortTime << ","
          << SORTINGINFO.batchSortTime << ","
@@ -238,6 +239,7 @@ void printSortInfo(struct SortingInfo sortInfo)
     printf("CPU Workload (%%): %lf\n", sortInfo.workload_cpu);
     printf("CPU thread number: %d\n", sortInfo.cpu_thread_num);
     printf("Data Transfer Time (Seconds): %.2f\n", sortInfo.dataTransferTime);
+    printf("Data prefetch Time (Seconds): %.2f\n", sortInfo.dataPrefetchTime);
     printf("gpu sorting Time (Seconds): %.2f\n", sortInfo.gpuSortTime);
     printf("cpu sorting Time (Seconds): %.2f\n", sortInfo.cpuSortTime);
 
