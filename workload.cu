@@ -173,7 +173,8 @@ int main(int argc, char *argv[])
     SORTINGINFO.dataTransferTime = data_trans_time; // Simplified assumption
     SORTINGINFO.batchSortTime = batch_sort_time;
     SORTINGINFO.mergeSortTime = mergeSort_time;
-    SORTINGINFO.totalTime = data_trans_time + batch_sort_time + mergeSort_time;
+    SORTINGINFO.totalSortTime = SORTINGINFO.gpuSortTime + SORTINGINFO.cpuSortTime + mergeSort_time;
+    SORTINGINFO.totalTime = data_trans_time + SORTINGINFO.dataPrefetchTime + batch_sort_time + mergeSort_time;
     SORTINGINFO.isSorted = sorted; // isSorted(sortedData); // Update after sorting
     printSortInfo(SORTINGINFO);
 
@@ -213,7 +214,7 @@ void writeToCSV(const std::string &filename, const SortingInfo &SORTINGINFO)
     // If file is empty, write the header
     if (isEmpty)
     {
-        file << "Data Size (GB),Total Elements,CPU workload, cpu_thread_num, Data Transfer Time (s),Data Prefetch Time (s),GPU Sort Time (s), CPU Sort Time(s) ,Batch Sort Time (s),Merge Sort Time (s),Total Time (s), Sorted\n";
+        file << "Data Size (GB),Total Elements,CPU workload, cpu_thread_num, Data Transfer Time (s),Data Prefetch Time (s),GPU Sort Time (s), CPU Sort Time(s) ,Batch Sort Time (s),Merge Sort Time (s),Total Sort Time (s), Total Time (s), Sorted\n";
     }
 
     file << SORTINGINFO.dataSizeGB << ","
@@ -226,6 +227,7 @@ void writeToCSV(const std::string &filename, const SortingInfo &SORTINGINFO)
          << SORTINGINFO.cpuSortTime << ","
          << SORTINGINFO.batchSortTime << ","
          << SORTINGINFO.mergeSortTime << ","
+         << SORTINGINFO.totalSortTime << ","
          << SORTINGINFO.totalTime << ","
          << (SORTINGINFO.isSorted ? "Yes" : "No") << "\n";
 
@@ -245,6 +247,7 @@ void printSortInfo(struct SortingInfo sortInfo)
 
     printf("batch sorting Time (Seconds): %.2f\n", sortInfo.batchSortTime);
     printf("merge sorting Time (Seconds): %.2f\n", sortInfo.mergeSortTime);
+    printf("Total Sort Time (Seconds): %.2f\n", sortInfo.totalSortTime);
     printf("Total Time (Seconds): %.2f\n", sortInfo.totalTime);
     printf("Is Sorted: %s\n", sortInfo.isSorted ? "True" : "False");
 }
