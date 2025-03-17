@@ -60,7 +60,8 @@ void gpu_merge(double *start, double *end, SortingInfo *SORTINGINFO)
         printf("Error in estimating storage: %s\n", cudaGetErrorString(err));
         return;
     }
-    double gpuSrotTime = cuda_timer_stop(gpuSortTimeStart, gpuSortTimeStop) / 1000.0;
+    double gpuSortTime = cuda_timer_stop(gpuSortTimeStart, gpuSortTimeStop) / 1000.0;
+    std::cout << "gpu sorting Time: " << gpuSortTime << std::endl;
 
     // Free temporary storage
     cudaFree(d_temp_storage);
