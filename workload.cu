@@ -92,6 +92,7 @@ int main(int argc, char *argv[])
     HANDLE_ERROR(cudaMallocManaged(&unSorted, input_size * sizeof(double))); // allocate unified memory
 
     SortingInfo SORTINGINFO;
+
     cudaEvent_t event, data_trans_start, data_trans_stop, batchSort_start, batchSort_stop, mergeSort_start, mergeSort_stop;
     cudaEventCreate(&event);
 
@@ -115,12 +116,12 @@ int main(int argc, char *argv[])
         {
 #pragma omp section
             {
-                cpu_merge(unSorted, splitIndex, cpu_thread_num, SORTINGINFO);
+                cpu_merge(unSorted, splitIndex, cpu_thread_num, &SORTINGINFO);
             }
 
 #pragma omp section
             {
-                gpu_merge(unSorted + splitIndex, unSorted + input_size, SORTINGINFO);
+                gpu_merge(unSorted + splitIndex, unSorted + input_size, &SORTINGINFO);
             }
         }
     }
@@ -128,13 +129,13 @@ int main(int argc, char *argv[])
     {
         printf("cpu 1.0\n");
         SORTINGINFO.gpuSortTime = 0;
-        cpu_merge(unSorted, splitIndex, cpu_thread_num, SORTINGINFO);
+        cpu_merge(unSorted, splitIndex, cpu_thread_num, &SORTINGINFO);
     }
     else
     {
         printf("cpu 0\n");
         SORTINGINFO.cpuSortTime = 0;
-        gpu_merge(unSorted + splitIndex, unSorted + input_size, SORTINGINFO);
+        gpu_merge(unSorted + splitIndex, unSorted + input_size, &SORTINGINFO);
     }
 
     double batch_sort_time = cuda_timer_stop(batchSort_start, batchSort_stop) / 1000.0;
