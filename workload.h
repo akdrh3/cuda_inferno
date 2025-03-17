@@ -12,8 +12,9 @@ struct SortingInfo
     double workload_cpu;
     int cpu_thread_num;
     double dataTransferTime;
-    double batchSortTime;
-    double mergeSortTime;
+    double gpuSortTime;
+    double cpuSortTime;
+    double batchSortTime double mergeSortTime;
     double totalTime;
     bool isSorted;
 };

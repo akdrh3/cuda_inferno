@@ -28,8 +28,9 @@ void cpu_merge(double *unSorted, uint64_t sizeOfArray, int threadNum);
 
 void gpu_merge(double *start, double *end, SortingInfo *SORTINGINFO)
 {
-    cudaEvent_t event, gpuSortTimeStart, gpuSortTimeStop, err;
+    cudaEvent_t event, gpuSortTimeStart, gpuSortTimeStop;
     cudaEventCreate(&event);
+    cudaError_t err;
 
     uint64_t num_items = end - start;
     printf("num_items = %lu\n", num_items);
