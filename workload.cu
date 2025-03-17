@@ -33,7 +33,7 @@ void gpu_merge(double *start, double *end, SortingInfo *SORTINGINFO)
     cudaError_t err;
 
     uint64_t num_items = end - start;
-    printf("num_items = %lu\n", num_items);
+    // printf("num_items = %lu\n", num_items);
 
     // Temporary storage for sorting
     void *d_temp_storage = nullptr;
@@ -60,6 +60,7 @@ void gpu_merge(double *start, double *end, SortingInfo *SORTINGINFO)
         printf("Error in estimating storage: %s\n", cudaGetErrorString(err));
         return;
     }
+    double gpuSrotTime = cuda_timer_stop(gpuSortTimeStart, gpuSortTimeStop) / 1000.0;
 
     // Free temporary storage
     cudaFree(d_temp_storage);
@@ -93,15 +94,18 @@ int main(int argc, char *argv[])
 
     SortingInfo SORTINGINFO;
 
-    cudaEvent_t event, data_trans_start, data_trans_stop, batchSort_start, batchSort_stop, mergeSort_start, mergeSort_stop;
+    cudaEvent_t event, data_trans_start, data_trans_stop, dataPrefetchTimeStart, dataPrefetchTimeStop, batchSort_start, batchSort_stop, mergeSort_start, mergeSort_stop;
     cudaEventCreate(&event);
 
     cuda_timer_start(&data_trans_start, &data_trans_stop);
     readFileToUnifiedMemory(file_name, unSorted, input_size);
+    double data_trans_time = cuda_timer_stop(data_trans_start, data_trans_stop) / 1000.0;
 
     // Prefetch to GPU before sorting
+    cuda_timer_start(&dataPrefetchTimeStart, &dataPrefetchTimeStop);
     HANDLE_ERROR(cudaMemPrefetchAsync(unSorted, input_size * sizeof(double), 0, 0));
-    double data_trans_time = cuda_timer_stop(data_trans_start, data_trans_stop) / 1000.0;
+    double dataPrefetchTime = cuda_timer_stop(dataPrefetchTimeStart, dataPrefetchTimeStop) / 1000.0;
+    std::cout << "data Prefetch Time: " << dataPrefetchTime << std::endl;
 
     uint64_t splitIndex = workload_cpu * input_size;
     cuda_timer_start(&batchSort_start, &batchSort_stop);
@@ -373,8 +377,9 @@ void cpu_merge(double *unSorted, uint64_t sizeOfArray, int threadNum, SortingInf
     mergeSort(&args);
     auto end = std::chrono::high_resolution_clock::now();
 
-    std::chrono::duration<double, std::milli> elapsed = end - start;
+    std::chrono::duration<double> elapsed = end - start;
     std::cout << "Sorting took " << elapsed.count() << " milliseconds.\n";
+    SORTINGINFO->cpuSortTime = elapsed.cout();
 
     pthread_mutex_destroy(&mutexPart);
 }
