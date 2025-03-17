@@ -379,7 +379,7 @@ void cpu_merge(double *unSorted, uint64_t sizeOfArray, int threadNum, SortingInf
 
     std::chrono::duration<double> elapsed = end - start;
     std::cout << "Sorting took " << elapsed.count() << " milliseconds.\n";
-    SORTINGINFO->cpuSortTime = elapsed.cout();
+    SORTINGINFO->cpuSortTime = elapsed.count();
 
     pthread_mutex_destroy(&mutexPart);
 }
