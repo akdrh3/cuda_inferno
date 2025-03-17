@@ -1,7 +1,6 @@
 #include "gpu_util.cuh"
 #include "workload.h"
 
-
 extern "C"
 {
 #include "util.h"
@@ -19,8 +18,7 @@ extern "C"
 #include <cstdio>
 #include <pthread.h>
 #include <vector>
-
-
+#include <chrono>
 
 bool isSorted(const std::vector<double> &data);
 void readFileToUnifiedMemory(const char *filename, double *data, uint64_t numElements);
@@ -28,11 +26,11 @@ void printSortInfo(struct SortingInfo sortInfo);
 void writeToCSV(const std::string &filename, const SortingInfo &SORTINGINFO);
 void cpu_merge(double *unSorted, uint64_t sizeOfArray, int threadNum);
 
-
-
-void gpu_merge(double *start, double *end) 
+void gpu_merge(double *start, double *end, SortingInfo *SORTINGINFO)
 {
-    cudaError_t err;
+    cudaEvent_t event, gpuSortTimeStart, gpuSortTimeStop, err;
+    cudaEventCreate(&event);
+
     uint64_t num_items = end - start;
     printf("num_items = %lu\n", num_items);
 
@@ -40,9 +38,12 @@ void gpu_merge(double *start, double *end)
     void *d_temp_storage = nullptr;
     size_t temp_storage_bytes = 0;
 
+    cuda_timer_start(&gpuSortTimeStart, &gpuSortTimeStop);
+
     // Get the amount of temporary storage needed
     err = cub::DeviceRadixSort::SortKeys<double>(d_temp_storage, temp_storage_bytes, start, start, num_items);
-    if (err != cudaSuccess) {
+    if (err != cudaSuccess)
+    {
         printf("Error in estimating storage: %s\n", cudaGetErrorString(err));
         return;
     }
@@ -53,7 +54,8 @@ void gpu_merge(double *start, double *end)
 
     // Run the sort operation
     err = cub::DeviceRadixSort::SortKeys<double>(d_temp_storage, temp_storage_bytes, start, start, num_items);
-    if (err != cudaSuccess) {
+    if (err != cudaSuccess)
+    {
         printf("Error in estimating storage: %s\n", cudaGetErrorString(err));
         return;
     }
@@ -62,10 +64,11 @@ void gpu_merge(double *start, double *end)
     cudaFree(d_temp_storage);
 }
 
-void merge_on_cpu(double *start, double *mid, double *end, double *result) {
-  __gnu_parallel::merge(start, mid, mid, end, result);
-}
+void merge_on_cpu(double *start, double *mid, double *end, double *result, SortingInfo *SORTINGINFO)
+{
 
+    __gnu_parallel::merge(start, mid, mid, end, result);
+}
 
 int main(int argc, char *argv[])
 {
@@ -87,6 +90,7 @@ int main(int argc, char *argv[])
     double *unSorted = NULL;
     HANDLE_ERROR(cudaMallocManaged(&unSorted, input_size * sizeof(double))); // allocate unified memory
 
+    SortingInfo SORTINGINFO;
     cudaEvent_t event, data_trans_start, data_trans_stop, batchSort_start, batchSort_stop, mergeSort_start, mergeSort_stop;
     cudaEventCreate(&event);
 
@@ -103,31 +107,34 @@ int main(int argc, char *argv[])
     omp_set_nested(1); // Enable nested parallelism
     printf("splitIndex: %lu, inputSize: %lu\n", splitIndex, input_size);
 
-    if(workload_cpu != 1 && workload_cpu != 0){
+    if (workload_cpu != 1 && workload_cpu != 0)
+    {
         printf("cpu not 1 or 0\n");
-    #pragma omp parallel sections
+#pragma omp parallel sections
         {
-    #pragma omp section
+#pragma omp section
             {
-                cpu_merge(unSorted, splitIndex, cpu_thread_num);
+                cpu_merge(unSorted, splitIndex, cpu_thread_num, SORTINGINFO);
             }
-    
-    #pragma omp section
+
+#pragma omp section
             {
-                gpu_merge(unSorted + splitIndex, unSorted + input_size);
+                gpu_merge(unSorted + splitIndex, unSorted + input_size, SORTINGINFO);
             }
         }
     }
-    else if(workload_cpu == 1){
+    else if (workload_cpu == 1)
+    {
         printf("cpu 1.0\n");
-        cpu_merge(unSorted, splitIndex, cpu_thread_num);
+        SORTINGINFO.gpuSortTime = 0;
+        cpu_merge(unSorted, splitIndex, cpu_thread_num, SORTINGINFO);
     }
-    else{
+    else
+    {
         printf("cpu 0\n");
-        gpu_merge(unSorted + splitIndex, unSorted + input_size);
+        SORTINGINFO.cpuSortTime = 0;
+        gpu_merge(unSorted + splitIndex, unSorted + input_size, SORTINGINFO);
     }
-
-
 
     double batch_sort_time = cuda_timer_stop(batchSort_start, batchSort_stop) / 1000.0;
 
@@ -146,7 +153,8 @@ int main(int argc, char *argv[])
         {
             sorted = false;
         }
-        else sorted = true;
+        else
+            sorted = true;
     }
 
     printf("unsorted sorted? : %d \n", sorted);
@@ -154,20 +162,19 @@ int main(int argc, char *argv[])
     SortingInfo SORTINGINFO;
     SORTINGINFO.dataSizeGB = (input_size * sizeof(double)) / (double)(1024 * 1024 * 1024);
     SORTINGINFO.numElements = input_size;
-    SORTINGINFO.workload_cpu = workload_cpu;        // Just for reading, adjust according to actual sort
+    SORTINGINFO.workload_cpu = workload_cpu; // Just for reading, adjust according to actual sort
     SORTINGINFO.cpu_thread_num = cpu_thread_num;
     SORTINGINFO.dataTransferTime = data_trans_time; // Simplified assumption
     SORTINGINFO.batchSortTime = batch_sort_time;
     SORTINGINFO.mergeSortTime = mergeSort_time;
     SORTINGINFO.totalTime = data_trans_time + batch_sort_time + mergeSort_time;
-    SORTINGINFO.isSorted = sorted; //isSorted(sortedData); // Update after sorting
+    SORTINGINFO.isSorted = sorted; // isSorted(sortedData); // Update after sorting
     printSortInfo(SORTINGINFO);
 
     writeToCSV("workload_performance_metrics.csv", SORTINGINFO);
     HANDLE_ERROR(cudaFree(unSorted));
     return 0;
 }
-
 
 // Function to read data from the file into unified memory
 void readFileToUnifiedMemory(const char *filename, double *data, uint64_t size_of_array)
@@ -208,6 +215,8 @@ void writeToCSV(const std::string &filename, const SortingInfo &SORTINGINFO)
          << SORTINGINFO.workload_cpu << ","
          << SORTINGINFO.cpu_thread_num << ","
          << SORTINGINFO.dataTransferTime << ","
+         << SORTINGINFO.gpuSortTime << ","
+         << SORTINGINFO.cpuSortTime << ","
          << SORTINGINFO.batchSortTime << ","
          << SORTINGINFO.mergeSortTime << ","
          << SORTINGINFO.totalTime << ","
@@ -223,6 +232,9 @@ void printSortInfo(struct SortingInfo sortInfo)
     printf("CPU Workload (%%): %lf\n", sortInfo.workload_cpu);
     printf("CPU thread number: %d\n", sortInfo.cpu_thread_num);
     printf("Data Transfer Time (Seconds): %.2f\n", sortInfo.dataTransferTime);
+    printf("gpu sorting Time (Seconds): %.2f\n", sortInfo.gpuSortTime);
+    printf("cpu sorting Time (Seconds): %.2f\n", sortInfo.cpuSortTime);
+
     printf("batch sorting Time (Seconds): %.2f\n", sortInfo.batchSortTime);
     printf("merge sorting Time (Seconds): %.2f\n", sortInfo.mergeSortTime);
     printf("Total Time (Seconds): %.2f\n", sortInfo.totalTime);
@@ -241,12 +253,11 @@ bool isSorted(const std::vector<double> &data)
     return true;
 }
 
-
-
 using namespace std;
 
-struct ThreadArgs {
-    double* array;
+struct ThreadArgs
+{
+    double *array;
     uint64_t left;
     uint64_t right;
     uint64_t depth;
@@ -256,14 +267,15 @@ struct ThreadArgs {
 pthread_mutex_t mutexPart;
 uint64_t currentPart = 0;
 
-void merge(double* arr, uint64_t l, uint64_t m, uint64_t r) {
+void merge(double *arr, uint64_t l, uint64_t m, uint64_t r)
+{
     uint64_t i, j, k;
     uint64_t n1 = m - l + 1;
     uint64_t n2 = r - m;
 
     // Create temp arrays
-    double* L = new double[n1];
-    double* R = new double[n2];
+    double *L = new double[n1];
+    double *R = new double[n2];
 
     // Copy data to temp arrays L[] and R[]
     for (i = 0; i < n1; i++)
@@ -275,11 +287,15 @@ void merge(double* arr, uint64_t l, uint64_t m, uint64_t r) {
     i = 0;
     j = 0;
     k = l;
-    while (i < n1 && j < n2) {
-        if (L[i] <= R[j]) {
+    while (i < n1 && j < n2)
+    {
+        if (L[i] <= R[j])
+        {
             arr[k] = L[i];
             i++;
-        } else {
+        }
+        else
+        {
             arr[k] = R[j];
             j++;
         }
@@ -287,14 +303,16 @@ void merge(double* arr, uint64_t l, uint64_t m, uint64_t r) {
     }
 
     // Copy the remaining elements of L[], if there are any
-    while (i < n1) {
+    while (i < n1)
+    {
         arr[k] = L[i];
         i++;
         k++;
     }
 
     // Copy the remaining elements of R[], if there are any
-    while (j < n2) {
+    while (j < n2)
+    {
         arr[k] = R[j];
         j++;
         k++;
@@ -304,10 +322,13 @@ void merge(double* arr, uint64_t l, uint64_t m, uint64_t r) {
     delete[] R;
 }
 
-void* mergeSort(void* args) {
-    ThreadArgs* arg = (ThreadArgs*)args;
-    if (arg->left < arg->right) {
-        if (arg->depth >= arg->maxDepth) {
+void *mergeSort(void *args)
+{
+    ThreadArgs *arg = (ThreadArgs *)args;
+    if (arg->left < arg->right)
+    {
+        if (arg->depth >= arg->maxDepth)
+        {
             // Perform normal mergesort if max depth reached
             uint64_t mid = arg->left + (arg->right - arg->left) / 2;
             ThreadArgs leftArgs = {arg->array, arg->left, mid, arg->depth + 1, arg->maxDepth};
@@ -315,7 +336,9 @@ void* mergeSort(void* args) {
             mergeSort(&leftArgs);
             mergeSort(&rightArgs);
             merge(arg->array, arg->left, mid, arg->right);
-        } else {
+        }
+        else
+        {
             uint64_t mid = arg->left + (arg->right - arg->left) / 2;
 
             pthread_t leftThread, rightThread;
@@ -334,18 +357,24 @@ void* mergeSort(void* args) {
     return NULL;
 }
 
-void cpu_merge(double *unSorted, uint64_t sizeOfArray, int threadNum) {
+void cpu_merge(double *unSorted, uint64_t sizeOfArray, int threadNum, SortingInfo *SORTINGINFO)
+{
 
     // Calculate max depth based on number of threads
     uint64_t maxDepth = 0;
-    while ((1 << maxDepth) < threadNum) maxDepth++;
+    while ((1 << maxDepth) < threadNum)
+        maxDepth++;
 
     pthread_mutex_init(&mutexPart, NULL);
 
     ThreadArgs args = {unSorted, 0, sizeOfArray - 1, 0, maxDepth};
-    mergeSort(&args);
 
+    auto start = std::chrono::high_resolution_clock::now();
+    mergeSort(&args);
+    auto end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> elapsed = end - start;
+    std::cout << "Sorting took " << elapsed.count() << " milliseconds.\n";
 
     pthread_mutex_destroy(&mutexPart);
-
 }
