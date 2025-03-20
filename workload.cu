@@ -26,6 +26,44 @@ void printSortInfo(struct SortingInfo sortInfo);
 void writeToCSV(const std::string &filename, const SortingInfo &SORTINGINFO);
 void cpu_merge(double *unSorted, uint64_t sizeOfArray, int threadNum, SortingInfo *SORTINGINFO);
 
+//
+// Block-sorting CUDA kernel
+//
+template <int BLOCK_THREADS, int ITEMS_PER_THREAD>
+__global__ void BlockSortKernel(int *d_in, int *d_out)
+{
+    // Specialize BlockLoad, BlockStore, and BlockRadixSort collective types
+    using BlockLoadT = cub::BlockLoad<
+        int, BLOCK_THREADS, ITEMS_PER_THREAD, cub::BLOCK_LOAD_TRANSPOSE>;
+    using BlockStoreT = cub::BlockStore<
+        int, BLOCK_THREADS, ITEMS_PER_THREAD, cub::BLOCK_STORE_TRANSPOSE>;
+    using BlockRadixSortT = cub::BlockRadixSort<
+        int, BLOCK_THREADS, ITEMS_PER_THREAD>;
+
+    // Allocate type-safe, repurposable shared memory for collectives
+    __shared__ union
+    {
+        typename BlockLoadT::TempStorage load;
+        typename BlockStoreT::TempStorage store;
+        typename BlockRadixSortT::TempStorage sort;
+    } temp_storage;
+
+    // Obtain this block's segment of consecutive keys (blocked across threads)
+    int thread_keys[ITEMS_PER_THREAD];
+    int block_offset = blockIdx.x * (BLOCK_THREADS * ITEMS_PER_THREAD);
+    BlockLoadT(temp_storage.load).Load(d_in + block_offset, thread_keys);
+
+    __syncthreads(); // Barrier for smem reuse
+
+    // Collectively sort the keys
+    BlockRadixSortT(temp_storage.sort).Sort(thread_keys);
+
+    __syncthreads(); // Barrier for smem reuse
+
+    // Store the sorted segment
+    BlockStoreT(temp_storage.store).Store(d_out + block_offset, thread_keys);
+}
+
 void gpu_merge(double *start, double *end, SortingInfo *SORTINGINFO)
 {
     cudaEvent_t event, gpuSortTimeStart, gpuSortTimeStop;
@@ -41,31 +79,40 @@ void gpu_merge(double *start, double *end, SortingInfo *SORTINGINFO)
 
     cuda_timer_start(&gpuSortTimeStart, &gpuSortTimeStop);
 
-    // Get the amount of temporary storage needed
-    err = cub::DeviceRadixSort::SortKeys<double>(d_temp_storage, temp_storage_bytes, start, start, num_items);
-    if (err != cudaSuccess)
-    {
-        printf("Error in estimating storage: %s\n", cudaGetErrorString(err));
-        return;
-    }
-    printf("temp_storage_bytes: %zu\n", temp_storage_bytes);
+    double *d_out = NULL;
 
-    // Allocate managed memory for temporary storage
-    HANDLE_ERROR(cudaMallocManaged(&d_temp_storage, temp_storage_bytes));
+    HANDLE_ERROR(cudaMallocManaged(&double, num_items * sizeof(double))); // allocate unified memory
 
-    // Run the sort operation
-    err = cub::DeviceRadixSort::SortKeys<double>(d_temp_storage, temp_storage_bytes, start, start, num_items);
-    if (err != cudaSuccess)
-    {
-        printf("Error in estimating storage: %s\n", cudaGetErrorString(err));
-        return;
-    }
+    uint64_t num_blocks = (num_items + 127) / 128;
+    BlockSortKernel<128, 16><<<num_blocks, 128>>>(start, d_out);
+    HANDLE_ERROR(cudaDeviceSynchronize());
+    start = d_out;
+
+    // // Get the amount of temporary storage needed
+    // err = cub::DeviceRadixSort::SortKeys<double>(d_temp_storage, temp_storage_bytes, start, start, num_items);
+    // if (err != cudaSuccess)
+    // {
+    //     printf("Error in estimating storage: %s\n", cudaGetErrorString(err));
+    //     return;
+    // }
+    // printf("temp_storage_bytes: %zu\n", temp_storage_bytes);
+
+    // // Allocate managed memory for temporary storage
+    // HANDLE_ERROR(cudaMallocManaged(&d_temp_storage, temp_storage_bytes));
+
+    // // Run the sort operation
+    // err = cub::DeviceRadixSort::SortKeys<double>(d_temp_storage, temp_storage_bytes, start, start, num_items);
+    // if (err != cudaSuccess)
+    // {
+    //     printf("Error in estimating storage: %s\n", cudaGetErrorString(err));
+    //     return;
+    // }
     double gpuSortTime = cuda_timer_stop(gpuSortTimeStart, gpuSortTimeStop) / 1000.0;
     std::cout << "gpu sorting Time: " << gpuSortTime << std::endl;
     SORTINGINFO->gpuSortTime = gpuSortTime;
 
     // Free temporary storage
-    cudaFree(d_temp_storage);
+    // cudaFree(d_temp_storage);
 }
 
 void merge_on_cpu(double *start, double *mid, double *end, double *result, SortingInfo *SORTINGINFO)
@@ -82,7 +129,7 @@ int main(int argc, char *argv[])
     }
 
     const char *file_name = argv[1];
-    uint64_t input_size = strtoull(argv[2], NULL, 10) * 1000000;
+    uint64_t input_size = strtoull(argv[2], NULL, 10); //* 1000000;
     double workload_cpu = strtod(argv[3], NULL);
     int cpu_thread_num = atoi(argv[4]);
 
