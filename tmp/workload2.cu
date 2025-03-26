@@ -27,77 +27,137 @@ void writeToCSV(const std::string &filename, const SortingInfo &SORTINGINFO);
 void cpu_merge(double *unSorted, uint64_t sizeOfArray, int threadNum, SortingInfo *SORTINGINFO);
 
 
-// Kernel to sort based on bits isolated with bit shifting and masking
-__global__ void radixSortKernel(uint64_t *data, int n, int bitShift, uint64_t *output) {
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
-    if (index >= n) return;
+template <int ValueSize, bool IsPlus>
+struct sm60_tuning {
+    static constexpr int threads = 128;
+    static constexpr uint64_t items = 16;  // Changed to uint64_t
+};
 
-    int count[256] = {0};
-    int mask = 0xFF;
+template <>
+struct sm60_tuning<8, true> { // Specialization for 8-byte values (e.g., uint64_t)
+    static constexpr int threads = 256;
+    static constexpr uint64_t items = 20;  // Changed to uint64_t
+};
 
-    // Count occurrences of each 'digit'
-    int digit = (data[index] >> bitShift) & mask;
-    atomicAdd(&count[digit], 1);
+template <int ValueSize>
+struct sm60_tuning<ValueSize, true> {
+    static constexpr int threads = 128;
+    static constexpr uint64_t items = 12;  // Changed to uint64_t
+};
 
-    __syncthreads();
+template <typename ValueType>
+struct SortingPolicy {
+    struct Policy600 : cub::ChainedPolicy<600, Policy600, Policy500> {
+        using tuning = sm60_tuning<sizeof(ValueType), false>;
+        using AlgorithmPolicy = cub::AgentRadixSortPolicy<
+            tuning::threads, static_cast<int>(tuning::items), 4, true
+        >;
+    };
+};
 
-    // Calculate prefix sum in shared memory
-    if (threadIdx.x == 0) {
-        int total = 0;
-        for (int i = 0; i < 256; i++) {
-            int oldCount = count[i];
-            count[i] = total;
-            total += oldCount;
-        }
-    }
 
-    __syncthreads();
 
-    // Sort based on the current digit
-    digit = (data[index] >> bitShift) & mask;
-    int pos = atomicAdd(&count[digit], 1);
-    output[pos] = data[index];
+
+//
+// Block-sorting CUDA kernel
+//
+template <int BLOCK_THREADS, int ITEMS_PER_THREAD>
+__global__ void BlockSortKernel(double *d_in, double *d_out)
+{
+    // Specialize BlockLoad, BlockStore, and BlockRadixSort collective types
+    using BlockLoadT = cub::BlockLoad<
+        int, BLOCK_THREADS, ITEMS_PER_THREAD, cub::BLOCK_LOAD_TRANSPOSE>;
+    using BlockStoreT = cub::BlockStore<
+        int, BLOCK_THREADS, ITEMS_PER_THREAD, cub::BLOCK_STORE_TRANSPOSE>;
+    using BlockRadixSortT = cub::BlockRadixSort<
+        int, BLOCK_THREADS, ITEMS_PER_THREAD>;
+
+    // Allocate type-safe, repurposable shared memory for collectives
+    __shared__ union
+    {
+        typename BlockLoadT::TempStorage load;
+        typename BlockStoreT::TempStorage store;
+        typename BlockRadixSortT::TempStorage sort;
+    } temp_storage;
+
+    // Obtain this block's segment of consecutive keys (blocked across threads)
+    int thread_keys[ITEMS_PER_THREAD];
+    //int thread_offset = blockIdx.x * (ITEMS_PER_THREAD);
+    //thread_keys = thread_keys + thread_offset;
+    uint64_t block_offset = blockIdx.x * (BLOCK_THREADS * ITEMS_PER_THREAD);
+    BlockLoadT(temp_storage.load).Load(d_in + block_offset, thread_keys);
+
+    __syncthreads(); // Barrier for smem reuse
+
+    // Collectively sort the keys
+    BlockRadixSortT(temp_storage.sort).Sort(thread_keys);
+
+    __syncthreads(); // Barrier for smem reuse
+
+    // Store the sorted segment
+    BlockStoreT(temp_storage.store).Store(d_out + block_offset, thread_keys);
 }
 
-// Function to handle the reinterpretation and setup the sort
-void radixSort(double *data, int n, SortingInfo *SORTINGINFO) {
+
+
+void gpu_merge(double *start, double *end, SortingInfo *SORTINGINFO)
+{
     cudaEvent_t event, gpuSortTimeStart, gpuSortTimeStop;
     cudaEventCreate(&event);
-    uint64_t *intData, *output;
-    cudaMallocManaged(&intData, n * sizeof(uint64_t));
-    cudaMallocManaged(&output, n * sizeof(uint64_t));
+    cudaError_t err;
 
-    // Reinterpret double as uint64_t
-    for (int i = 0; i < n; i++) {
-        intData[i] = reinterpret_cast<uint64_t&>(data[i]);
-    }
+    uint64_t num_items = end - start;
+    // printf("num_items = %lu\n", num_items);
+
+    // Temporary storage for sorting
+    void *d_temp_storage = nullptr;
+    size_t temp_storage_bytes = 0;
+
+    using ValueType = uint64_t;  // Sorting uint64_t data
+    using MyPolicy = SortingPolicy<ValueType>::Policy600;
 
     cuda_timer_start(&gpuSortTimeStart, &gpuSortTimeStop);
-    // Sort each 8-bit segment of the numbers
-    for (int shift = 0; shift < 64; shift += 8) {
-        radixSortKernel<<<(n + 255) / 256, 256>>>(intData, n, shift, output);
-        cudaDeviceSynchronize();
-        // Copy sorted data back to input for next iteration
-        memcpy(intData, output, n * sizeof(uint64_t));
+
+    
+    // double *d_out = NULL;
+    // int *thread_keys = NULL; 
+    uint64_t num_blocks = 144;
+    // //uint64_t num_blocks = (num_items + (512 * 16 - 1)) / (512 * 16);
+    uint64_t items_per_thread = num_items + (num_blocks * 512-1)/ (num_blocks * 512);
+    
+    // HANDLE_ERROR(cudaMallocManaged(&d_out, num_items * sizeof(double))); // allocate unified memory
+    // HANDLE_ERROR(cudaMallocManaged(&thread_keys, sizeof(int) * num_blocks * items_per_thread));
+
+    // std::cout << "items per thread: " << items_per_thread << std::endl;
+    // BlockSortKernel<512, 16><<<num_blocks, 512>>>(start, d_out, thread_keys);
+    // HANDLE_ERROR(cudaDeviceSynchronize());
+    // start = d_out;
+    
+    // Get the amount of temporary storage needed
+    err = cub::DeviceRadixSort::SortKeys<MyPolicy>(d_temp_storage, temp_storage_bytes, start, start, num_items);
+    if (err != cudaSuccess)
+    {
+        printf("Error in estimating storage: %s\n", cudaGetErrorString(err));
+        return;
+    }
+    printf("temp_storage_bytes: %zu\n", temp_storage_bytes);
+
+    // Allocate managed memory for temporary storage
+    HANDLE_ERROR(cudaMallocManaged(&d_temp_storage, temp_storage_bytes));
+
+    // Run the sort operation
+    err = cub::DeviceRadixSort::SortKeys<MyPolicy>(d_temp_storage, temp_storage_bytes, start, start, num_items);
+    if (err != cudaSuccess)
+    {
+        printf("Error in estimating storage: %s\n", cudaGetErrorString(err));
+        return;
     }
     double gpuSortTime = cuda_timer_stop(gpuSortTimeStart, gpuSortTimeStop) / 1000.0;
     std::cout << "gpu sorting Time: " << gpuSortTime << std::endl;
     SORTINGINFO->gpuSortTime = gpuSortTime;
 
-    // Copy sorted uint64_t back to double
-    for (int i = 0; i < n; i++) {
-        data[i] = reinterpret_cast<double&>(intData[i]);
-    }
-
-    cudaFree(intData);
-    cudaFree(output);
-}
-
-void gpu_merge(double *start, double *end, SortingInfo *SORTINGINFO)
-{
-    uint64_t num_items = end - start;
-    printf("num_items = %lu\n", num_items);
-    radixSort(start, num_items, SORTINGINFO);
+    // Free temporary storage
+    // cudaFree(d_temp_storage);
 }
 
 void merge_on_cpu(double *start, double *mid, double *end, double *result, SortingInfo *SORTINGINFO)
@@ -114,9 +174,14 @@ int main(int argc, char *argv[])
     }
 
     const char *file_name = argv[1];
-    uint64_t input_size = strtoull(argv[2], NULL, 10) * 1000000;
+    uint64_t input_size = strtoull(argv[2], NULL, 10); //* 1000000;
     double workload_cpu = strtod(argv[3], NULL);
     int cpu_thread_num = atoi(argv[4]);
+
+    // size_t heapSize = 1L * 1024 * 1024 * 1024;
+
+    // HANDLE_ERROR(cudaDeviceSetLimit(cudaLimitMallocHeapSize, heapSize));
+
     double *unSorted = NULL;
     HANDLE_ERROR(cudaMallocManaged(&unSorted, input_size * sizeof(double))); // allocate unified memory
 
@@ -133,6 +198,7 @@ int main(int argc, char *argv[])
     cuda_timer_start(&dataPrefetchTimeStart, &dataPrefetchTimeStop);
     HANDLE_ERROR(cudaMemPrefetchAsync(unSorted, input_size * sizeof(double), 0, 0));
     double dataPrefetchTime = cuda_timer_stop(dataPrefetchTimeStart, dataPrefetchTimeStop) / 1000.0;
+    std::cout << "data Prefetch Time: " << dataPrefetchTime << std::endl;
     SORTINGINFO.dataPrefetchTime = dataPrefetchTime;
 
     uint64_t splitIndex = workload_cpu * input_size;
@@ -143,6 +209,7 @@ int main(int argc, char *argv[])
 
     if (workload_cpu != 1 && workload_cpu != 0)
     {
+        printf("cpu not 1 or 0\n");
 #pragma omp parallel sections
         {
 #pragma omp section
@@ -158,17 +225,18 @@ int main(int argc, char *argv[])
     }
     else if (workload_cpu == 1)
     {
+        printf("cpu 1.0\n");
         SORTINGINFO.gpuSortTime = 0;
         cpu_merge(unSorted, splitIndex, cpu_thread_num, &SORTINGINFO);
     }
     else
     {
+        printf("cpu 0\n");
         SORTINGINFO.cpuSortTime = 0;
         gpu_merge(unSorted + splitIndex, unSorted + input_size, &SORTINGINFO);
     }
 
     double batch_sort_time = cuda_timer_stop(batchSort_start, batchSort_stop) / 1000.0;
-
 
     cuda_timer_start(&mergeSort_start, &mergeSort_stop);
 
@@ -189,7 +257,7 @@ int main(int argc, char *argv[])
             sorted = true;
     }
 
-    printf("after merge unsorted sorted? : %d \n", sorted);
+    printf("unsorted sorted? : %d \n", sorted);
     SORTINGINFO.dataSizeGB = (input_size * sizeof(double)) / (double)(1024 * 1024 * 1024);
     SORTINGINFO.numElements = input_size;
     SORTINGINFO.workload_cpu = workload_cpu; // Just for reading, adjust according to actual sort
