@@ -2,10 +2,10 @@
 // profiling
 int tm();
 // data[], size, threads, blocks, 
-void mergesort(long*, long, dim3, dim3);
+void mergesort(double*, uint64_t, dim3, dim3);
 // A[]. B[], size, width, slices, nThreads
-__global__ void gpu_mergesort(long*, long*, long, long, long, dim3*, dim3*);
-__device__ void gpu_bottomUpMerge(long*, long*, long, long, long);
+__global__ void gpu_mergesort(double*, double*, uint64_t, uint64_t, uint64_t, dim3*, dim3*);
+__device__ void gpu_bottomUpMerge(double*, double*, uint64_t, uint64_t, uint64_t);
 
 bool verbose = true;
 dim3 threadsPerBlock;
@@ -108,13 +108,13 @@ __device__ unsigned int getIdx(dim3* threads, dim3* blocks) {
 //
 // Perform a full mergesort on our section of the data.
 //
-__global__ void gpu_mergesort(long* source, long* dest, long size, long width, long slices, dim3* threads, dim3* blocks) {
+__global__ void gpu_mergesort(double* source, double* dest, uint64_t size, uint64_t width, uint64_t slices, dim3* threads, dim3* blocks) {
     unsigned int idx = getIdx(threads, blocks);
-    long start = width*idx*slices, 
+    uint64_t start = width*idx*slices, 
          middle, 
          end;
 
-    for (long slice = 0; slice < slices; slice++) {
+    for (uint64_t slice = 0; slice < slices; slice++) {
         if (start >= size)
             break;
 
@@ -129,10 +129,10 @@ __global__ void gpu_mergesort(long* source, long* dest, long size, long width, l
 // Finally, sort something
 // gets called by gpu_mergesort() for each slice
 //
-__device__ void gpu_bottomUpMerge(long* source, long* dest, long start, long middle, long end) {
-    long i = start;
-    long j = middle;
-    for (long k = start; k < end; k++) {
+__device__ void gpu_bottomUpMerge(double* source, double* dest, uint64_t start, uint64_t middle, uint64_t end) {
+    uint64_t i = start;
+    uint64_t j = middle;
+    for (uint64_t k = start; k < end; k++) {
         if (i < middle && (j >= end || source[i] < source[j])) {
             dest[k] = source[i];
             i++;
