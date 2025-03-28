@@ -30,101 +30,43 @@ void printSortInfo(struct SortingInfo sortInfo);
 void writeToCSV(const std::string &filename, const SortingInfo &SORTINGINFO);
 void cpu_merge(double *unSorted, uint64_t sizeOfArray, int threadNum, SortingInfo *SORTINGINFO);
 
-__global__ void gpu_mergesort(double*, double*, uint64_t, uint64_t, uint64_t, dim3*, dim3*);
-__device__ void gpu_bottomUpMerge(double*, double*, uint64_t, uint64_t, uint64_t);
-bool verbose = true;
-dim3 threadsPerBlock;
-dim3 blocksPerGrid;
 
-
-void gpu_merge(double *start, double *end, SortingInfo *SORTINGINFO, dim3 threadsPerBlock, dim3 blocksPerGrid)
+void gpu_merge(double *start, double *end, SortingInfo *SORTINGINFO)
 {
     cudaEvent_t event, gpuSortTimeStart, gpuSortTimeStop;
     cudaEventCreate(&event);
-    cuda_timer_start(&gpuSortTimeStart, &gpuSortTimeStop);
-
+    cudaError_t err;
     uint64_t num_items = end - start;
-    printf("num_items = %lu\n", num_items);
 
-
-    //
-    // Allocate two arrays on the GPU
-    // we switch back and forth between them during the sort
-    //
-    double* D_data;
-    double* D_swp;
-    dim3* D_threads;
-    dim3* D_blocks;
-    
-    // Actually allocate the two arrays
-
-    HANDLE_ERROR(cudaMallocManaged((void**) &D_data, num_items * sizeof(double)));
-    HANDLE_ERROR(cudaMallocManaged((void**) &D_swp, num_items * sizeof(double)));
-    // if (verbose)
-    //     std::cout << "cudaMalloc device lists: " << tm() << " microseconds\n";
-
-    // Copy from our input list into the first array
-    //
-    // Copy the thread / block info to the GPU as well
-    //
-    HANDLE_ERROR(cudaMalloc((void**) &D_threads, sizeof(dim3)));
-    HANDLE_ERROR(cudaMalloc((void**) &D_blocks, sizeof(dim3)));
-
-    // if (verbose)
-    //     std::cout << "cudaMalloc device thread data: " << tm() << " microseconds\n";
-    HANDLE_ERROR(cudaMemcpy(D_threads, &threadsPerBlock, sizeof(dim3), cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(D_blocks, &blocksPerGrid, sizeof(dim3), cudaMemcpyHostToDevice));
-    // if (verbose)
-    //     std::cout << "cudaMemcpy thread data to device: " << tm() << " microseconds\n";
-
-    double* A = D_data;
-    double* B = D_swp;
-
-    uint64_t nThreads = threadsPerBlock.x * threadsPerBlock.y * threadsPerBlock.z *
-                    blocksPerGrid.x * blocksPerGrid.y * blocksPerGrid.z;
-
+    // Temporary storage for sorting
+    void     *d_temp_storage = nullptr;
+    size_t   temp_storage_bytes = 0;
     cuda_timer_start(&gpuSortTimeStart, &gpuSortTimeStop);
-    //
-    // Slice up the list and give pieces of it to each thread, letting the pieces grow
-    // bigger and bigger until the whole list is sorted
-    //
-    for (uint64_t width = 2; width < (num_items << 1); width <<= 1) {
-        uint64_t slices = num_items / ((nThreads) * width) + 1;
 
-        // if (verbose) {
-        //     std::cout << "mergeSort - width: " << width 
-        //               << ", slices: " << slices 
-        //               << ", nThreads: " << nThreads << '\n';
-        //     tm();
-        // }
+    err = cub::DeviceRadixSort::SortKeys<double>(d_temp_storage, temp_storage_bytes, start, start, num_items);
+     if (err != cudaSuccess)
+     {
+         printf("Error in estimating storage: %s\n", cudaGetErrorString(err));
+         return;
+     }
+     printf("temp_storage_bytes: %zu\n", temp_storage_bytes);
  
-
-        // Actually call the kernel
-        gpu_mergesort<<<blocksPerGrid, threadsPerBlock>>>(A, B, num_items, width, slices, D_threads, D_blocks);
-
-        // if (verbose)
-        //     std::cout << "call mergesort kernel: " << tm() << " microseconds\n";
-
-        // Switch the input / output arrays instead of copying them around
-        A = A == D_data ? D_swp : D_data;
-        B = B == D_data ? D_swp : D_data;
-    }
-
-    //
-    // Get the list back from the GPU
-    //
-    // Free the GPU memory
-    HANDLE_ERROR(cudaFree(A));
-    HANDLE_ERROR(cudaFree(B));
-    // if (verbose)
-    //     std::cout << "cudaFree: " << tm() << " microseconds\n";
-
-
-
+     // Allocate managed memory for temporary storage
+     HANDLE_ERROR(cudaMallocManaged(&d_temp_storage, temp_storage_bytes));
+ 
+     // Run the sort operation
+     err = cub::DeviceRadixSort::SortKeys<double>(d_temp_storage, temp_storage_bytes, start, start, num_items);
+     if (err != cudaSuccess)
+     {
+         printf("Error in estimating storage: %s\n", cudaGetErrorString(err));
+         return;
+     }
     double gpuSortTime = cuda_timer_stop(gpuSortTimeStart, gpuSortTimeStop) / 1000.0;
     std::cout << "gpu sorting Time: " << gpuSortTime << std::endl;
     SORTINGINFO->gpuSortTime = gpuSortTime;
 
+    //Free temporary storage;
+    cudaFree(d_temp_storage);
 }
 
 void merge_on_cpu(double *start, double *mid, double *end, double *result, SortingInfo *SORTINGINFO)
@@ -145,7 +87,7 @@ int main(int argc, char *argv[])
     double workload_cpu = strtod(argv[3], NULL);
     int cpu_thread_num = atoi(argv[4]);
     double *unSorted = NULL;
-    HANDLE_ERROR(cudaMallocManaged(&unSorted, input_size * sizeof(double))); // allocate unified memory
+    HANDLE_ERROR(cudaMallocManaged(&unSorted, input_size * sizeof(double))); // allocatesx unified memory
 
     SortingInfo SORTINGINFO;
 
@@ -168,16 +110,6 @@ int main(int argc, char *argv[])
     omp_set_nested(1); // Enable nested parallelism
     printf("splitIndex: %lu, inputSize: %lu\n", splitIndex, input_size);
 
-
-
-    threadsPerBlock.x = 512;
-    threadsPerBlock.y = 1;
-    threadsPerBlock.z = 1;
-
-    blocksPerGrid.x = 2;
-    blocksPerGrid.y = 1;
-    blocksPerGrid.z = 1;
-
     if (workload_cpu != 1 && workload_cpu != 0)
     {
 #pragma omp parallel sections
@@ -189,7 +121,7 @@ int main(int argc, char *argv[])
 
 #pragma omp section
             {
-                gpu_merge(unSorted + splitIndex, unSorted + input_size, &SORTINGINFO, threadsPerBlock, blocksPerGrid);
+                gpu_merge(unSorted + splitIndex, unSorted + input_size, &SORTINGINFO);
             }
         }
     }
@@ -201,7 +133,7 @@ int main(int argc, char *argv[])
     else
     {
         SORTINGINFO.cpuSortTime = 0;
-        gpu_merge(unSorted + splitIndex, unSorted + input_size, &SORTINGINFO, threadsPerBlock, blocksPerGrid);
+        gpu_merge(unSorted + splitIndex, unSorted + input_size, &SORTINGINFO);
     }
 
     double batch_sort_time = cuda_timer_stop(batchSort_start, batchSort_stop) / 1000.0;
@@ -309,57 +241,6 @@ void printSortInfo(struct SortingInfo sortInfo)
     printf("Total Sort Time (Seconds): %.2f\n", sortInfo.totalSortTime);
     printf("Total Time (Seconds): %.2f\n", sortInfo.totalTime);
     printf("Is Sorted: %s\n", sortInfo.isSorted ? "True" : "False");
-}
-
-
-// GPU helper function
-// calculate the id of the current thread
-__device__ unsigned int getIdx(dim3* threads, dim3* blocks) {
-    int x;
-    return threadIdx.x +
-           threadIdx.y * (x  = threads->x) +
-           threadIdx.z * (x *= threads->y) +
-           blockIdx.x  * (x *= threads->z) +
-           blockIdx.y  * (x *= blocks->z) +
-           blockIdx.z  * (x *= blocks->y);
-}
-
-//
-// Perform a full mergesort on our section of the data.
-//
-__global__ void gpu_mergesort(double* source, double* dest, uint64_t size, uint64_t width, uint64_t slices, dim3* threads, dim3* blocks) {
-    unsigned int idx = getIdx(threads, blocks);
-    uint64_t start = width*idx*slices, 
-         middle, 
-         end;
-
-    for (uint64_t slice = 0; slice < slices; slice++) {
-        if (start >= size)
-            break;
-
-        middle = min(start + (width >> 1), size);
-        end = min(start + width, size);
-        gpu_bottomUpMerge(source, dest, start, middle, end);
-        start += width;
-    }
-}
-
-//
-// Finally, sort something
-// gets called by gpu_mergesort() for each slice
-//
-__device__ void gpu_bottomUpMerge(double* source, double* dest, uint64_t start, uint64_t middle, uint64_t end) {
-    uint64_t i = start;
-    uint64_t j = middle;
-    for (uint64_t k = start; k < end; k++) {
-        if (i < middle && (j >= end || source[i] < source[j])) {
-            dest[k] = source[i];
-            i++;
-        } else {
-            dest[k] = source[j];
-            j++;
-        }
-    }
 }
 
 bool isSorted(const std::vector<double> &data)
